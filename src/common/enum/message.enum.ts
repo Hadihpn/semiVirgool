@@ -10,6 +10,8 @@ export enum AuthMessage {
   SentOtp = "5 digit otp code send  to you",
   ExpiredCode = "this Code has been expired.get new one",
   TryAgain = "something wrong. try login again",
+  LoginAgain = "login again",
+  LoginRequired = "something wrong. try login again",
 }
 export enum PublicMessage {
   LoggedIn = "you logged in sucessfully",
