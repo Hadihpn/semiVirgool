@@ -7,7 +7,6 @@ import { AuthMessage } from "src/common/enum/message.enum";
 export class TokenService {
   constructor(private jwtService: JwtService) {}
   createOtpToken(payload: CookiePaylaod) {
-    console.log("payload is :", payload);
     const token = this.jwtService.sign(payload, {
       secret: process.env.OTP_TOKEN_SECRET,
       expiresIn: 60 * 2,
