@@ -1,5 +1,6 @@
 export enum EntityEnum {
   USER = "user",
   PROFILE = "profile",
-  OTP="otp"
+  OTP="otp",
+  Category="category"
 }

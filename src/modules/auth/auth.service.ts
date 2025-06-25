@@ -46,12 +46,9 @@ export class AuthService {
     switch (type) {
       case AuthType.Login:
         result = await this.login(method, username);
-        console.log("resulst is", result);
         return this.sendResponse(res, result);
       case AuthType.Register:
-        console.log("type is:", type);
         result = await this.register(method, username);
-        console.log("resulst is", result);
         return this.sendResponse(res, result);
       default:
         throw new UnauthorizedException(`type ${type} is not valid`);
@@ -75,13 +72,9 @@ export class AuthService {
       method,
       validUsername
     );
-    console.log("user is ", user);
-
     if (!user) throw new UnauthorizedException(AuthMessage.NotFoundAccount);
     const otp = await this.saveOtp(user.id);
     const token = await this.tokenService.createOtpToken({ userId: user.id });
-    console.log("otp is :", otp);
-    console.log("token is :", token);
     return {
       token,
       code: otp.code,
@@ -100,14 +93,10 @@ export class AuthService {
       [method]: username,
     });
     await this.userRepository.save(user);
-    console.log("user is :", user);
-
     user.user_name = `m_${user.id}`;
     await this.userRepository.save(user);
     const otp = await this.saveOtp(user.id);
     const token = await this.tokenService.createOtpToken({ userId: user.id });
-    console.log("otp is :", otp);
-    console.log("token is :", token);
     return {
       token,
       code: otp.code,
