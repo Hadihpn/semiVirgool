@@ -16,7 +16,10 @@ export enum AuthMessage {
 export enum PublicMessage {
   LoggedIn = "you logged in sucessfully",
   LoggedOut = "you logged out sucessfully",
-  
+  Created="Object created successfully"
 }
 export enum NotFoundMessage {}
 export enum ValidtionMessage {}
+export enum ConflictMessage {
+  Category = "cateegory title has been existed",
+}
