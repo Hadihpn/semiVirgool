@@ -7,5 +7,7 @@ export class CategoryEntity extends BaseEntity {
   @Column()
   title: string;
   @Column({ nullable: true })
+  slug: string;
+  @Column({ nullable: true })
   priority: number;
 }

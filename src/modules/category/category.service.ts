@@ -5,6 +5,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { CategoryEntity } from './entities/category.entity';
 import { Repository } from 'typeorm';
 import { AuthMessage, ConflictMessage, PublicMessage } from 'src/common/enum/message.enum';
+import { PaginationDto } from 'src/common/dtos/pagination.dto';
 
 @Injectable()
 export class CategoryService {
@@ -19,7 +20,8 @@ export class CategoryService {
     }
   }
 
-  findAll() {
+  findAll( paginationDto:PaginationDto) {
+    console.log(paginationDto);
     return this.categoryRepository.findBy({});
   }
 
