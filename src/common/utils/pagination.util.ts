@@ -11,5 +11,13 @@ export function PaginationSolver(paginationDto : PaginationDto){
         limit,
         skip
     }
+}
 
+export function PaginationGenerator(count:number=0,page:number=0,limit:number=0){
+    return {
+        totalCount:count,
+        page:+page,
+        limit:+limit,
+        pageCount:Math.ceil(count/limit) 
+    }
 }
