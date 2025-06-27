@@ -1,6 +1,7 @@
 import { BaseEntity } from "src/common/abstracts/base.entity";
 import { EntityEnum } from "src/common/enum/entity.enum";
-import { Column, CreateDateColumn, Entity } from "typeorm";
+import { Column, CreateDateColumn, Entity, OneToOne } from "typeorm";
+import { UserEntity } from "./user.entity";
 
 @Entity(EntityEnum.PROFILE)
 export class ProfileEntity extends BaseEntity {
@@ -18,4 +19,10 @@ export class ProfileEntity extends BaseEntity {
   birtdate: Date;
   @Column({nullable:true})
   linkdin_profile: string;
+  @Column({nullable:true})
+  userId: number;
+  @OneToOne(()=>UserEntity, user => user.profile, {
+    onDelete: 'CASCADE',
+  })
+  user: UserEntity;
 }
