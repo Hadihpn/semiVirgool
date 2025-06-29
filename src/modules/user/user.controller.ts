@@ -23,8 +23,10 @@ import { diskStorage } from "multer";
 import {
   multerDestination,
   multerFilename,
+  multerStorage,
 } from "src/common/utils/multer.util";
 import { AuthGuard } from "../auth/guards/auth.guard";
+import { ProfileImage } from "./types/files";
 
 @Controller("user")
 @ApiTags("User")
@@ -66,10 +68,7 @@ export class UserController {
         { name: "bg_image", maxCount: 1 },
       ],
       {
-        storage: diskStorage({
-          destination: multerDestination("user-profile"),
-          filename: multerFilename,
-        }),
+        storage: multerStorage("user-profile")
       }
     )
   )
@@ -80,7 +79,7 @@ export class UserController {
         validators: [],
       })
     )
-    files: any,
+    files: ProfileImage,
     @Body() profileDto: ProfileDto
   ) {
     return this.userService.changeProfile(files, profileDto);

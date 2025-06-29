@@ -4,6 +4,7 @@ import { extname, join } from "path";
 import { EntityEnum } from "../enum/entity.enum";
 import { BadRequestException } from "@nestjs/common";
 import { ValidtionMessage } from "../enum/message.enum";
+import { diskStorage } from "multer";
 export type CallBackDestination = (
   error: Error | null,
   destination: string
@@ -31,4 +32,10 @@ export function multerFilename(
 }
 function validateImageFormat(format){
   return  Object.values(validateImageFormat).includes(format)
+}
+export function multerStorage(folderName:string) {
+  return diskStorage({
+          destination: multerDestination(folderName),
+          filename: multerFilename,
+        })
 }

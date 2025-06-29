@@ -8,6 +8,7 @@ import { Repository } from "typeorm";
 import { ProfileEntity } from "./entities/profile.entity";
 import { ProfileDto } from "./dto/profile.dto";
 import { Request } from "express";
+import { ProfileImage } from "./types/files";
 
 @Injectable({ scope: Scope.REQUEST })
 export class UserService {
@@ -37,15 +38,15 @@ export class UserService {
   remove(id: number) {
     return `This action removes a #${id} user`;
   }
-  async changeProfile(files: any, profileDto: ProfileDto) {
+  async changeProfile(files: ProfileImage, profileDto: ProfileDto) {
     const { id: userId, profileId } = this.request.user!;
     if(files?.image_profile?.length>0){
       let [image] = files?.image_profile;
-      profileDto.image_profile = image
+      profileDto.image_profile = image.path
     }
     if(files?.bg_image?.length>0){
       let [image] = files?.bg_image;
-      profileDto.bg_image = image
+      profileDto.bg_image = image.path
     }
     // Filter out undefined/null values from DTO
     const updateData = Object.fromEntries(
@@ -71,5 +72,12 @@ export class UserService {
     }
 
     return profile;
+  }
+  profile(){
+    const{id}=this.request.user!;
+    return this.userRepository.findOne({
+      where:{id},
+      relations:["profile"]
+    })
   }
 }
