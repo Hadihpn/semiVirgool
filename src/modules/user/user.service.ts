@@ -8,8 +8,6 @@ import { Repository } from "typeorm";
 import { ProfileEntity } from "./entities/profile.entity";
 import { ProfileDto } from "./dto/profile.dto";
 import { Request } from "express";
-import { isDate } from "class-validator";
-import { GenderEnum } from "./enum/gender.enum";
 
 @Injectable({ scope: Scope.REQUEST })
 export class UserService {
@@ -39,28 +37,39 @@ export class UserService {
   remove(id: number) {
     return `This action removes a #${id} user`;
   }
-  async changeProfile(profileDto: ProfileDto) {
-    // AuthGuard ensures user is always present, so we can safely assert
+  async changeProfile(files: any, profileDto: ProfileDto) {
     const { id: userId, profileId } = this.request.user!;
+    if(files?.image_profile?.length>0){
+      let [image] = files?.image_profile;
+      profileDto.image_profile = image
+    }
+    if(files?.bg_image?.length>0){
+      let [image] = files?.bg_image;
+      profileDto.bg_image = image
+    }
+    // Filter out undefined/null values from DTO
+    const updateData = Object.fromEntries(
+      Object.entries(profileDto).filter(
+        ([_, value]) => value !== undefined && value !== null
+      )
+    );
     let profile = await this.profileRepository.findOneBy({ userId });
     if (profile) {
-      const {nick_name,bio,birtdate,gender,linkdin_profile} = profileDto
-      if(nick_name) profile.nick_name = nick_name;
-      if(bio) profile.bio = bio; 
-      if(birtdate && isDate(new Date(birtdate))) profile.birtdate = birtdate;
-      if(gender && Object.values(GenderEnum as any).includes(gender)) profile.gender = gender;
-      if(linkdin_profile) profile.linkdin_profile = linkdin_profile;
+      // Update existing profile
+      Object.assign(profile, updateData);
     } else {
-      profile = await this.profileRepository.create({...profileDto,userId});
+      // Create new profile
+      profile = this.profileRepository.create({ ...updateData, userId });
     }
-    profile = await this.profileRepository.save(profile!);
+    profile = await this.profileRepository.save(profile);
+    // Update user's profileId if not set
     if (!profileId) {
       await this.userRepository.update(
         { id: userId },
-        { profileId: profile?.id }
+        { profileId: profile.id }
       );
     }
-    // Add your profile update logic here
+
     return profile;
   }
 }
