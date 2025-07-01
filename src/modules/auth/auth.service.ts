@@ -96,6 +96,8 @@ export class AuthService {
     user.user_name = `m_${user.id}`;
     await this.userRepository.save(user);
     const otp = await this.saveOtp(user.id);
+    otp.method = method;
+    await this.OtpRepository.save(otp);
     const token = await this.tokenService.createOtpToken({ userId: user.id });
     return {
       token,
@@ -142,9 +144,24 @@ export class AuthService {
     if (otp.code !== code)
       throw new UnauthorizedException(AuthMessage.TryAgain);
     const accessToken = await this.tokenService.createAccessToken({ userId });
+    if (otp.method === AuthMethod.Email) {
+      await this.userRepository.update(
+        { id: userId },
+        {
+          varified_email : true,
+        }
+      );
+    }else if(otp.method === AuthMethod.Phone){
+      await this.userRepository.update(
+        { id: userId },
+        {
+          varified_phone : true,
+        }
+      );
+    }
     return {
       message: PublicMessage.LoggedIn,
-      accessToken
+      accessToken,
     };
     return token;
   }
@@ -175,10 +192,10 @@ export class AuthService {
     );
     return otp;
   }
-  async validateAccessToken(token){
-    const {userId} = this.tokenService.verifyAccessToken(token);
-    const user = await this.userRepository.findOneBy({id:userId});
-    if(!user) throw new UnauthorizedException(AuthMessage.LoginAgain);
+  async validateAccessToken(token) {
+    const { userId } = this.tokenService.verifyAccessToken(token);
+    const user = await this.userRepository.findOneBy({ id: userId });
+    if (!user) throw new UnauthorizedException(AuthMessage.LoginAgain);
     return user;
   }
 }

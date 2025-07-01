@@ -1,4 +1,4 @@
-import { Inject, Injectable, Scope } from "@nestjs/common";
+import { ConflictException, Inject, Injectable, Scope, UnauthorizedException } from "@nestjs/common";
 import { REQUEST } from "@nestjs/core";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
@@ -9,6 +9,9 @@ import { ProfileEntity } from "./entities/profile.entity";
 import { ProfileDto } from "./dto/profile.dto";
 import { Request } from "express";
 import { ProfileImage } from "./types/files";
+import { AuthMessage, ConflictMessage, PublicMessage } from "src/common/enum/message.enum";
+import { AuthService } from "../auth/auth.service";
+import { TokenService } from "../auth/token.service";
 
 @Injectable({ scope: Scope.REQUEST })
 export class UserService {
@@ -17,7 +20,9 @@ export class UserService {
     private userRepository: Repository<UserEntity>,
     @InjectRepository(ProfileEntity)
     private profileRepository: Repository<ProfileEntity>,
-    @Inject(REQUEST) private request: Request
+    @Inject(REQUEST) private request: Request,
+    private authService :AuthService,
+    private tokenervice  : TokenService    
   ) {}
   create(createUserDto: CreateUserDto) {
     return "This action adds a new user";
@@ -42,11 +47,11 @@ export class UserService {
     const { id: userId, profileId } = this.request.user!;
     if(files?.image_profile?.length>0){
       let [image] = files?.image_profile;
-      profileDto.image_profile = image.path
+      profileDto.image_profile = image?.path?.slice(7)
     }
     if(files?.bg_image?.length>0){
       let [image] = files?.bg_image;
-      profileDto.bg_image = image.path
+      profileDto.bg_image = image?.path?.slice(7)
     }
     // Filter out undefined/null values from DTO
     const updateData = Object.fromEntries(
@@ -79,5 +84,23 @@ export class UserService {
       where:{id},
       relations:["profile"]
     })
+  }
+  async changeEmail(email:string){
+    const {id} = this.request.user!;
+    const user = await this.userRepository.findOneBy({email});
+    if(!user) throw new UnauthorizedException(AuthMessage.LoginAgain)
+    if(user && user?.id!== id) {throw new ConflictException(ConflictMessage.Email) }
+    else if(user && user.id == id){
+      return {
+        message:PublicMessage.Updated
+      }
+    }
+    user.new_email= email;
+    const otp = await this.authService.saveOtp(user.id);
+    const token = await this.tokenervice.createEmailToken({email})
+    return {
+      coe:otp.code,
+      token
+    }
   }
 }

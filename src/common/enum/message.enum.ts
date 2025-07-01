@@ -9,7 +9,7 @@ export enum AuthMessage {
   InvalidUser = "cannot find any user with this info",
   SentOtp = "5 digit otp code send  to you",
   ExpiredCode = "this Code has been expired.get new one",
-  TryAgain = "something wrong. try login again",
+  TryAgain = "something wrong. try again",
   LoginAgain = "login again",
   LoginRequired = "something wrong. try login again",
 }
@@ -32,5 +32,6 @@ export enum ValidtionMessage {
   InvalidImageFormat="image format must be png , jpg or jpeg"
 }
 export enum ConflictMessage {
-  Category = "cateegory title has been existed",
+  Category = "category title has been existed",
+  Email = "email has been existed",
 }
