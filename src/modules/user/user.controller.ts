@@ -11,6 +11,7 @@ import {
   UploadedFile,
   ParseFilePipe,
   UseGuards,
+  Res,
 } from "@nestjs/common";
 import { UserService } from "./user.service";
 import { CreateUserDto } from "./dto/create-user.dto";
@@ -27,6 +28,11 @@ import {
 } from "src/common/utils/multer.util";
 import { AuthGuard } from "../auth/guards/auth.guard";
 import { ProfileImage } from "./types/files";
+import { changeEmailDto } from "./entities/profile.entity";
+import { Response } from "express";
+import { CookieKeys } from "../auth/enums/cookie.enum";
+import { CookieOptionsToken } from "src/common/utils/cookie.util";
+import { AuthMessage, PublicMessage } from "src/common/enum/message.enum";
 
 @Controller("user")
 @ApiTags("User")
@@ -83,5 +89,19 @@ export class UserController {
     @Body() profileDto: ProfileDto
   ) {
     return this.userService.changeProfile(files, profileDto);
+  }
+  @Get("profile")
+  profile(){
+    return this.userService.profile();
+  }
+  @Patch("change-email")
+  async changeEmail(@Body() emailDto:changeEmailDto, @Res() res:Response   ){
+    const {code,token,message}= await this.userService.changeEmail(emailDto.email)
+    if(message) return res.json({message});
+    res.cookie(CookieKeys.EmailOTP,token,CookieOptionsToken());
+    res.json({
+      code,
+      message:AuthMessage.SentOtp
+    })
   }
 }

@@ -3,7 +3,7 @@ import { mkdirSync } from "fs";
 import { extname, join } from "path";
 import { EntityEnum } from "../enum/entity.enum";
 import { BadRequestException } from "@nestjs/common";
-import { ValidtionMessage } from "../enum/message.enum";
+import { ValidationMessage } from "../enum/message.enum";
 import { diskStorage } from "multer";
 export type CallBackDestination = (
   error: Error | null,
@@ -25,7 +25,7 @@ export function multerFilename(
 ): void {
   const ext = extname(file.originalname);
   if(!validateImageFormat(ext)){
-    cb(new BadRequestException(ValidtionMessage.InvalidImageFormat),"null")
+    cb(new BadRequestException(ValidationMessage.InvalidImageFormat),"null")
   }
   const filename = `${Date.now()}${ext}`;
   cb(null, filename);

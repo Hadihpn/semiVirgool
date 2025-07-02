@@ -28,8 +28,12 @@ export enum NotFoundMessage {
   NotFoundPost="can not find this Post",
   NotFoundUser="can not find this User"
 }
-export enum ValidtionMessage {
-  InvalidImageFormat="image format must be png , jpg or jpeg"
+export enum ValidationMessage {
+  InvalidImageFormat="image format must be png , jpg or jpeg",
+  InavalidEmailFormat="please enter the valid email",
+  InavalidPhoneFormat="please enter the valid phone number",
+  
+
 }
 export enum ConflictMessage {
   Category = "category title has been existed",

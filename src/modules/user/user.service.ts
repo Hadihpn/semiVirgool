@@ -99,7 +99,7 @@ export class UserService {
     const otp = await this.authService.saveOtp(user.id);
     const token = await this.tokenervice.createEmailToken({email})
     return {
-      coe:otp.code,
+      code:otp.code,
       token
     }
   }
