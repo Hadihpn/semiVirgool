@@ -1,4 +1,10 @@
-import { ConflictException, Inject, Injectable, Scope, UnauthorizedException } from "@nestjs/common";
+import {
+  ConflictException,
+  Inject,
+  Injectable,
+  Scope,
+  UnauthorizedException,
+} from "@nestjs/common";
 import { REQUEST } from "@nestjs/core";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
@@ -9,9 +15,16 @@ import { ProfileEntity } from "./entities/profile.entity";
 import { ProfileDto } from "./dto/profile.dto";
 import { Request } from "express";
 import { ProfileImage } from "./types/files";
-import { AuthMessage, ConflictMessage, PublicMessage } from "src/common/enum/message.enum";
+import {
+  AuthMessage,
+  ConflictMessage,
+  PublicMessage,
+} from "src/common/enum/message.enum";
 import { AuthService } from "../auth/auth.service";
 import { TokenService } from "../auth/token.service";
+import { OtpEntity } from "./entities/otp.entity";
+import { CookieKeys } from "../auth/enums/cookie.enum";
+import { AuthMethod } from "../auth/enums/method.enum";
 
 @Injectable({ scope: Scope.REQUEST })
 export class UserService {
@@ -20,9 +33,11 @@ export class UserService {
     private userRepository: Repository<UserEntity>,
     @InjectRepository(ProfileEntity)
     private profileRepository: Repository<ProfileEntity>,
+    @InjectRepository(OtpEntity)
+    private otpRepository: Repository<OtpEntity>,
     @Inject(REQUEST) private request: Request,
-    private authService :AuthService,
-    private tokenervice  : TokenService    
+    private authService: AuthService,
+    private tokenService: TokenService
   ) {}
   create(createUserDto: CreateUserDto) {
     return "This action adds a new user";
@@ -45,13 +60,13 @@ export class UserService {
   }
   async changeProfile(files: ProfileImage, profileDto: ProfileDto) {
     const { id: userId, profileId } = this.request.user!;
-    if(files?.image_profile?.length>0){
+    if (files?.image_profile?.length > 0) {
       let [image] = files?.image_profile;
-      profileDto.image_profile = image?.path?.slice(7)
+      profileDto.image_profile = image?.path?.slice(7);
     }
-    if(files?.bg_image?.length>0){
+    if (files?.bg_image?.length > 0) {
       let [image] = files?.bg_image;
-      profileDto.bg_image = image?.path?.slice(7)
+      profileDto.bg_image = image?.path?.slice(7);
     }
     // Filter out undefined/null values from DTO
     const updateData = Object.fromEntries(
@@ -78,29 +93,118 @@ export class UserService {
 
     return profile;
   }
-  profile(){
-    const{id}=this.request.user!;
+  profile() {
+    const { id } = this.request.user!;
     return this.userRepository.findOne({
-      where:{id},
-      relations:["profile"]
-    })
+      where: { id },
+      relations: ["profile"],
+    });
   }
-  async changeEmail(email:string){
-    const {id} = this.request.user!;
-    const user = await this.userRepository.findOneBy({email});
-    if(!user) throw new UnauthorizedException(AuthMessage.LoginAgain)
-    if(user && user?.id!== id) {throw new ConflictException(ConflictMessage.Email) }
-    else if(user && user.id == id){
+  async changeEmail(email: string) {
+    const { id } = this.request.user!;
+    const user = await this.userRepository.findOneBy({ email });
+    if (!user) throw new UnauthorizedException(AuthMessage.LoginAgain);
+    if (user && user?.id !== id) {
+      throw new ConflictException(ConflictMessage.Email);
+    } else if (user && user.id == id) {
       return {
-        message:PublicMessage.Updated
-      }
+        message: PublicMessage.Updated,
+      };
     }
-    user.new_email= email;
-    const otp = await this.authService.saveOtp(user.id);
-    const token = await this.tokenervice.createEmailToken({email})
+    user.new_email = email;
+    const otp = await this.authService.saveOtp(user.id, AuthMethod.Email);
+    const token = await this.tokenService.createEmailToken({ email });
     return {
-      code:otp.code,
-      token
+      code: otp.code,
+      token,
+    };
+  }
+  async verifyEmail(code: string) {
+    const { id: userId, new_email } = this.request.user!;
+    const otp = await this.checkOtp(userId, code, AuthMethod.Email);
+    const token = this.request.cookies?.[CookieKeys.EmailOTP];
+    if (!token) throw new UnauthorizedException(AuthMessage.ExpiredCode);
+    const { email } = await this.tokenService.verifyEmailToken(token);
+    if (!email || email != new_email)
+      throw new UnauthorizedException(AuthMessage.TryAgain);
+    await this.userRepository.update(
+      { id: userId },
+      {
+        email,
+        new_email: undefined,
+        varified_email: true,
+      }
+    );
+    return {
+      message: PublicMessage.Updated,
+    };
+  }
+  async changePhone(phone: string) {
+    const { id } = this.request.user!;
+    const user = await this.userRepository.findOneBy({ phone });
+    if (!user) throw new UnauthorizedException(AuthMessage.LoginAgain);
+    if (user && user?.id !== id) {
+      throw new ConflictException(ConflictMessage.Phone);
+    } else if (user && user.id == id) {
+      return {
+        message: PublicMessage.Updated,
+      };
     }
+    user.new_phone = phone;
+    const otp = await this.authService.saveOtp(user.id, AuthMethod.Phone);
+    const token = await this.tokenService.createPhoneToken({ phone });
+    return {
+      code: otp.code,
+      token,
+    };
+  }
+  async verifyPhone(code: string) {
+    const { id: userId, new_phone } = this.request.user!;
+    const otp = await this.checkOtp(userId, code, AuthMethod.Phone);
+    const token = this.request.cookies?.[CookieKeys.PhoneOTP];
+    if (!token) throw new UnauthorizedException(AuthMessage.ExpiredCode);
+    const { phone } = await this.tokenService.verifyPhoneToken(token);
+    if (!phone || phone != new_phone)
+      throw new UnauthorizedException(AuthMessage.TryAgain);
+    await this.userRepository.update(
+      { id: userId },
+      {
+        phone,
+        new_phone: undefined,
+        varified_phone: true,
+      }
+    );
+    return {
+      message: PublicMessage.Updated,
+    };
+  }
+
+  async checkOtp(userId: number, code: string, method) {
+    const otp = await this.otpRepository.findOneBy({ userId, method });
+    if (!otp) throw new UnauthorizedException(AuthMessage.TryAgain);
+    const now = new Date();
+    if (otp.expiresIn < now)
+      throw new UnauthorizedException(AuthMessage.ExpiredCode);
+    if (otp.code !== code)
+      throw new UnauthorizedException(AuthMessage.TryAgain);
+    return otp;
+  }
+  async changeUsername(username: string) {
+    const { id } = this.request.user!;
+    const user = await this.userRepository.findOneBy({ user_name: username });
+    if (!user) throw new UnauthorizedException(AuthMessage.LoginAgain);
+    if (user && user?.id !== id) {
+      throw new ConflictException(ConflictMessage.Username);
+    } else if (user && user.id == id) {
+      return {
+        message: PublicMessage.Updated,
+      };
+    }
+    await this.userRepository.update(
+      { id },
+      {
+        user_name: username,
+      }
+    );
   }
 }

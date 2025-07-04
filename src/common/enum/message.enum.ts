@@ -38,4 +38,6 @@ export enum ValidationMessage {
 export enum ConflictMessage {
   Category = "category title has been existed",
   Email = "email has been existed",
+  Phone = "phone has been existed",
+  Username = "username has been existed",
 }

@@ -28,11 +28,16 @@ import {
 } from "src/common/utils/multer.util";
 import { AuthGuard } from "../auth/guards/auth.guard";
 import { ProfileImage } from "./types/files";
-import { changeEmailDto } from "./entities/profile.entity";
+import {
+  changeEmailDto,
+  changePhoneDto,
+  changeUsernameDto,
+} from "./entities/profile.entity";
 import { Response } from "express";
 import { CookieKeys } from "../auth/enums/cookie.enum";
 import { CookieOptionsToken } from "src/common/utils/cookie.util";
 import { AuthMessage, PublicMessage } from "src/common/enum/message.enum";
+import { CheckOtpDto } from "../auth/dto/basic.dto";
 
 @Controller("user")
 @ApiTags("User")
@@ -74,7 +79,7 @@ export class UserController {
         { name: "bg_image", maxCount: 1 },
       ],
       {
-        storage: multerStorage("user-profile")
+        storage: multerStorage("user-profile"),
       }
     )
   )
@@ -91,17 +96,51 @@ export class UserController {
     return this.userService.changeProfile(files, profileDto);
   }
   @Get("profile")
-  profile(){
+  profile() {
     return this.userService.profile();
   }
   @Patch("change-email")
-  async changeEmail(@Body() emailDto:changeEmailDto, @Res() res:Response   ){
-    const {code,token,message}= await this.userService.changeEmail(emailDto.email)
-    if(message) return res.json({message});
-    res.cookie(CookieKeys.EmailOTP,token,CookieOptionsToken());
+  @ApiConsumes(SwaggerConsumes.UrlEncoded, SwaggerConsumes.Json)
+  async changeEmail(@Body() emailDto: changeEmailDto, @Res() res: Response) {
+    const { code, token, message } = await this.userService.changeEmail(
+      emailDto.email
+    );
+    if (message) return res.json({ message });
+    res.cookie(CookieKeys.EmailOTP, token, CookieOptionsToken());
     res.json({
       code,
-      message:AuthMessage.SentOtp
-    })
+      message: AuthMessage.SentOtp,
+    });
+  }
+  @Post("verify-email-otp")
+  @ApiConsumes(SwaggerConsumes.UrlEncoded, SwaggerConsumes.Json)
+  async varifyEmail(@Body() otpDto: CheckOtpDto) {
+    return this.userService.verifyEmail(otpDto.code);
+  }
+  @Patch("change-phone")
+  @ApiConsumes(SwaggerConsumes.UrlEncoded, SwaggerConsumes.Json)
+  async changePhone(@Body() phoneDto: changePhoneDto, @Res() res: Response) {
+    const { code, token, message } = await this.userService.changeEmail(
+      phoneDto.phone
+    );
+    if (message) return res.json({ message });
+    res.cookie(CookieKeys.PhoneOTP, token, CookieOptionsToken());
+    res.json({
+      code,
+      message: AuthMessage.SentOtp,
+    });
+  }
+  @Post("verify-phone-otp")
+  @ApiConsumes(SwaggerConsumes.UrlEncoded, SwaggerConsumes.Json)
+  async varifyPhone(@Body() otpDto: CheckOtpDto) {
+    return this.userService.verifyEmail(otpDto.code);
+  }
+  @Patch("change-username")
+  @ApiConsumes(SwaggerConsumes.UrlEncoded, SwaggerConsumes.Json)
+  async changeUsername(
+    @Body() usernameDto: changeUsernameDto,
+    @Res() res: Response
+  ) {
+    return this.userService.changeUsername(usernameDto.username);
   }
 }

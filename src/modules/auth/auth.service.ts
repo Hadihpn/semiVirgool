@@ -37,7 +37,7 @@ export class AuthService {
     @InjectRepository(ProfileEntity)
     private profileRepository: Repository<ProfileEntity>,
     @InjectRepository(OtpEntity)
-    private OtpRepository: Repository<OtpEntity>,
+    private otpRepository: Repository<OtpEntity>,
     @Inject(REQUEST) private request: Request,
     private tokenService: TokenService
   ) {}
@@ -71,7 +71,7 @@ export class AuthService {
       validUsername
     );
     if (!user) throw new UnauthorizedException(AuthMessage.NotFoundAccount);
-    const otp = await this.saveOtp(user.id);
+    const otp = await this.saveOtp(user.id,method);
     const token = await this.tokenService.createOtpToken({ userId: user.id });
     return {
       token,
@@ -93,9 +93,7 @@ export class AuthService {
     await this.userRepository.save(user);
     user.user_name = `m_${user.id}`;
     await this.userRepository.save(user);
-    const otp = await this.saveOtp(user.id);
-    otp.method = method;
-    await this.OtpRepository.save(otp);
+    const otp = await this.saveOtp(user.id,method);
     const token = await this.tokenService.createOtpToken({ userId: user.id });
     return {
       token,
@@ -134,7 +132,7 @@ export class AuthService {
     if (!token) throw new UnauthorizedException(AuthMessage.ExpiredCode);
     const { userId } = await this.tokenService.verifyOtpToken(token);
     if (!userId) throw new UnauthorizedException(AuthMessage.NotFoundAccount);
-    const otp = await this.OtpRepository.findOneBy({ userId });
+    const otp = await this.otpRepository.findOneBy({ userId });
     if (!otp) throw new UnauthorizedException(AuthMessage.TryAgain);
     const now = new Date();
     if (otp.expiresIn < now)
@@ -163,25 +161,25 @@ export class AuthService {
     };
     return token;
   }
-  async saveOtp(userId: number) {
+  async saveOtp(userId: number,method:AuthMethod) {
     const code = randomInt(10000, 99999).toString();
     const now = new Date();
     const expiresIn = new Date(now.getTime() + 1000 * 60 * 2);
-    let otp = await this.OtpRepository.findOneBy({ userId });
+    let otp = await this.otpRepository.findOneBy({ userId,method });
     if (otp) {
-      console.log;
       if (otp.expiresIn > now)
         throw new BadRequestException(AuthMessage.OtpIsValid);
       otp.code = code;
       otp.expiresIn = expiresIn;
     } else {
-      otp = await this.OtpRepository.create({
+      otp = await this.otpRepository.create({
         code: code,
         expiresIn: expiresIn,
         userId: userId,
+        method
       });
     }
-    await this.OtpRepository.save(otp);
+    await this.otpRepository.save(otp);
     await this.userRepository.update(
       { id: userId },
       {

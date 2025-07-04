@@ -13,6 +13,8 @@ export class UserEntity extends BaseEntity {
   email: string;
   @Column({ unique: true, nullable: true })
   new_email: string;
+  @Column({ unique: true, nullable: true })
+  new_phone: string;
   @Column({ unique: true, nullable: false })
   varified_email: boolean;
   @Column({ unique: true, nullable: false })

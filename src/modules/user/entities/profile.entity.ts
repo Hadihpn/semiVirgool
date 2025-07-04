@@ -3,7 +3,7 @@ import { EntityEnum } from "src/common/enum/entity.enum";
 import { Column, CreateDateColumn, Entity, OneToOne } from "typeorm";
 import { UserEntity } from "./user.entity";
 import { ApiProperty } from "@nestjs/swagger";
-import { IsEmail, IsMobilePhone, IsPhoneNumber } from "class-validator";
+import { IsEmail, IsMobilePhone, IsPhoneNumber, IsString, Length } from "class-validator";
 import { ValidationMessage } from "src/common/enum/message.enum";
 
 @Entity(EntityEnum.PROFILE)
@@ -39,4 +39,10 @@ export class changePhoneDto {
   @ApiProperty()
   @IsMobilePhone("fa-IR",{},{message:ValidationMessage.InavalidEmailFormat})
   phone: string;
+}
+export class changeUsernameDto {
+  @ApiProperty()
+  @IsString()
+  @Length(3, 50)
+  username: string;
 }
