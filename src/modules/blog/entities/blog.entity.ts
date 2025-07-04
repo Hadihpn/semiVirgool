@@ -4,6 +4,7 @@ import { Column, CreateDateColumn, Entity, ManyToOne, OneToMany } from "typeorm"
 import { BlogStatusEnum } from "../enum/status.enum";
 import { UserEntity } from "src/modules/user/entities/user.entity";
 import { BlogLikeEntity } from "./like.enitity";
+import { BlogBookmarkEntity } from "./bookmark.enitity";
 
 @Entity(EntityEnum.Blog)
 export class BlogEntity extends BaseEntity {
@@ -23,6 +24,8 @@ export class BlogEntity extends BaseEntity {
   author:UserEntity
   @OneToMany(()=>BlogLikeEntity,like=>like.blog)
   likes:BlogLikeEntity[]
+  @OneToMany(()=>BlogBookmarkEntity,bookmark=>bookmark.blog)
+  bookmarks:BlogBookmarkEntity[]
   @CreateDateColumn()
   created_at: Date;
   @CreateDateColumn()

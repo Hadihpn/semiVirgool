@@ -12,6 +12,7 @@ import { OtpEntity } from "./otp.entity";
 import { ProfileEntity } from "./profile.entity";
 import { BlogEntity } from "src/modules/blog/entities/blog.entity";
 import { BlogLikeEntity } from "src/modules/blog/entities/like.enitity";
+import { BlogBookmarkEntity } from "src/modules/blog/entities/bookmark.enitity";
 @Entity(EntityEnum.USER)
 export class UserEntity extends BaseEntity {
   @Column({ unique: true, nullable: true })
@@ -44,6 +45,8 @@ export class UserEntity extends BaseEntity {
   blogs: BlogEntity[];
   @OneToMany(() => BlogLikeEntity, (like) => like.user)
   blog_likes: BlogLikeEntity[];
+  @OneToMany(()=>BlogBookmarkEntity,bookmark=>bookmark.user)
+  blog_bookmarks:BlogBookmarkEntity[];
   @CreateDateColumn()
   created_at: Date;
   @CreateDateColumn()
