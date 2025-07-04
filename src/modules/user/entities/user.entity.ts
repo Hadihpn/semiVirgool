@@ -1,8 +1,17 @@
 import { BaseEntity } from "src/common/abstracts/base.entity";
 import { EntityEnum } from "src/common/enum/entity.enum";
-import { Column, CreateDateColumn, Entity, JoinColumn, OneToOne } from "typeorm";
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  JoinColumn,
+  OneToMany,
+  OneToOne,
+} from "typeorm";
 import { OtpEntity } from "./otp.entity";
 import { ProfileEntity } from "./profile.entity";
+import { BlogEntity } from "src/modules/blog/entities/blog.entity";
+import { BlogLikeEntity } from "src/modules/blog/entities/like.enitity";
 @Entity(EntityEnum.USER)
 export class UserEntity extends BaseEntity {
   @Column({ unique: true, nullable: true })
@@ -29,8 +38,12 @@ export class UserEntity extends BaseEntity {
   @Column({ nullable: true })
   profileId: number;
   @OneToOne(() => ProfileEntity, (profile) => profile.user, { nullable: true })
-  @JoinColumn() 
+  @JoinColumn()
   profile: ProfileEntity;
+  @OneToMany(() => BlogEntity, (blog) => blog.author)
+  blogs: BlogEntity[];
+  @OneToMany(() => BlogLikeEntity, (like) => like.user)
+  blog_likes: BlogLikeEntity[];
   @CreateDateColumn()
   created_at: Date;
   @CreateDateColumn()
