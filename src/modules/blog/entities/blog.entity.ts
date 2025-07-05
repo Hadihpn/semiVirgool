@@ -1,10 +1,17 @@
 import { BaseEntity } from "src/common/abstracts/base.entity";
 import { EntityEnum } from "src/common/enum/entity.enum";
-import { Column, CreateDateColumn, Entity, ManyToOne, OneToMany } from "typeorm";
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  ManyToOne,
+  OneToMany,
+} from "typeorm";
 import { BlogStatusEnum } from "../enum/status.enum";
 import { UserEntity } from "src/modules/user/entities/user.entity";
 import { BlogLikeEntity } from "./like.enitity";
 import { BlogBookmarkEntity } from "./bookmark.enitity";
+import { BlogCommentEntity } from "./comment.enitity";
 
 @Entity(EntityEnum.Blog)
 export class BlogEntity extends BaseEntity {
@@ -16,16 +23,22 @@ export class BlogEntity extends BaseEntity {
   content: string;
   @Column({ default: BlogStatusEnum.Draft })
   status: string;
+  @Column({ unique: true })
+  slug: string;
   @Column({ nullable: true })
   image: string;
   @Column()
   authorId: number;
-  @ManyToOne(()=>UserEntity,user=>user.blogs,{onDelete:"CASCADE"})
-  author:UserEntity
-  @OneToMany(()=>BlogLikeEntity,like=>like.blog)
-  likes:BlogLikeEntity[]
-  @OneToMany(()=>BlogBookmarkEntity,bookmark=>bookmark.blog)
-  bookmarks:BlogBookmarkEntity[]
+  @Column()
+  time_for_study: string;
+  @ManyToOne(() => UserEntity, (user) => user.blogs, { onDelete: "CASCADE" })
+  author: UserEntity;
+  @OneToMany(() => BlogLikeEntity, (like) => like.blog)
+  likes: BlogLikeEntity[];
+  @OneToMany(() => BlogBookmarkEntity, (bookmark) => bookmark.blog)
+  bookmarks: BlogBookmarkEntity[];
+  @OneToMany(() => BlogCommentEntity, (comment) => comment.blog)
+  comment: BlogCommentEntity[];
   @CreateDateColumn()
   created_at: Date;
   @CreateDateColumn()
