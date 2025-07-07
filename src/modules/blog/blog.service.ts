@@ -14,6 +14,8 @@ import { Request } from "express";
 import { BlogStatusEnum } from "./enum/status.enum";
 import { AuthMessage, PublicMessage } from "src/common/enum/message.enum";
 import { randomId } from "src/common/utils/function.util";
+import { PaginationDto } from "src/common/dtos/pagination.dto";
+import { PaginationGenerator, PaginationSolver } from "src/common/utils/pagination.util";
 
 @Injectable({ scope: Scope.REQUEST })
 export class BlogService {
@@ -60,5 +62,20 @@ export class BlogService {
         id: "DESC",
       },
     });
+  }
+  async blogsList(paginationDto:PaginationDto) {
+    const {page,limit,skip} = PaginationSolver(paginationDto);
+    const [blogs,count] = await this.blogRepository.findAndCount({
+      where: {},
+      order: {
+        id: "DESC",
+      },
+      skip,
+      take:limit
+    });
+    return {
+        pagination:PaginationGenerator(count,page,limit),
+        blogs
+    }
   }
 }

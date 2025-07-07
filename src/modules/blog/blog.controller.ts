@@ -7,6 +7,7 @@ import { SwaggerConsumes } from "src/common/enum/swagger-consumes.enums";
 import { AuthGuard } from "../auth/guards/auth.guard";
 import { Pagination } from "src/common/decorator/pagination.decorator";
 import { PaginationDto } from "src/common/dtos/pagination.dto";
+import { SkipAuth } from "src/common/decorator/skipAuth.ecorator";
 
 @Controller("blog")
 @UseGuards(AuthGuard)
@@ -17,15 +18,15 @@ export class BlogController {
   @ApiConsumes(SwaggerConsumes.UrlEncoded, SwaggerConsumes.Json)
   createBlog(@Body() blogDto: CreateBlogDto) {
     return this.blogService.createBlog(blogDto);
-   
   }
   @Get("myBlog")
-  myBlogs(){
-    return this.blogService.myBlogs()
+  myBlogs() {
+    return this.blogService.myBlogs();
   }
-   @Get("")
-   @Pagination()
-  blogs(@Query() paginationDto:PaginationDto){
-    return this.blogService.blogsList(paginationDto)
+  @Get("")
+  @SkipAuth()
+  @Pagination()
+  blogs(@Query() paginationDto: PaginationDto) {
+    return this.blogService.blogsList(paginationDto);
   }
 }
