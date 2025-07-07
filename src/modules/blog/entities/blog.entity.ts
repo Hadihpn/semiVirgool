@@ -9,9 +9,9 @@ import {
 } from "typeorm";
 import { BlogStatusEnum } from "../enum/status.enum";
 import { UserEntity } from "src/modules/user/entities/user.entity";
-import { BlogLikeEntity } from "./like.enitity";
-import { BlogBookmarkEntity } from "./bookmark.enitity";
-import { BlogCommentEntity } from "./comment.enitity";
+import { BlogLikeEntity } from "./like.entity";
+import { BlogBookmarkEntity } from "./bookmark.entity";
+import { BlogCommentEntity } from "./comment.entity";
 
 @Entity(EntityEnum.Blog)
 export class BlogEntity extends BaseEntity {
@@ -28,9 +28,9 @@ export class BlogEntity extends BaseEntity {
   @Column({ nullable: true })
   image: string;
   @Column()
-  authorId: number;
-  @Column()
   time_for_study: string;
+  @Column()
+  authorId: number;
   @ManyToOne(() => UserEntity, (user) => user.blogs, { onDelete: "CASCADE" })
   author: UserEntity;
   @OneToMany(() => BlogLikeEntity, (like) => like.blog)

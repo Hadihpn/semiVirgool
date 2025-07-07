@@ -128,11 +128,19 @@ export class AuthService {
     }
   }
   async checkOtp(code: string) {
+    console.log(code);
+    
     const token = this.request.cookies?.[CookieKeys.OTP];
+    console.log(token);
+    
     if (!token) throw new UnauthorizedException(AuthMessage.ExpiredCode);
     const { userId } = await this.tokenService.verifyOtpToken(token);
+    console.log(userId);
+    
     if (!userId) throw new UnauthorizedException(AuthMessage.NotFoundAccount);
     const otp = await this.otpRepository.findOneBy({ userId });
+    console.log(otp);
+    
     if (!otp) throw new UnauthorizedException(AuthMessage.TryAgain);
     const now = new Date();
     if (otp.expiresIn < now)
@@ -170,6 +178,7 @@ export class AuthService {
       if (otp.expiresIn > now)
         throw new BadRequestException(AuthMessage.OtpIsValid);
       otp.code = code;
+      otp.method = method;
       otp.expiresIn = expiresIn;
     } else {
       otp = await this.otpRepository.create({
@@ -179,6 +188,9 @@ export class AuthService {
         method
       });
     }
+    console.log("otp");
+    console.log(otp);
+    
     await this.otpRepository.save(otp);
     await this.userRepository.update(
       { id: userId },

@@ -20,6 +20,7 @@ export enum PublicMessage {
   Deleted="Object deleted successfully",
   Updated="Object updated successfully",
   Inserted="Object inserted successfully",
+  SomethingWrong = "something wrong.",
 }
 
 export enum NotFoundMessage {

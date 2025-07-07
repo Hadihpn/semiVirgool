@@ -11,9 +11,9 @@ import {
 import { OtpEntity } from "./otp.entity";
 import { ProfileEntity } from "./profile.entity";
 import { BlogEntity } from "src/modules/blog/entities/blog.entity";
-import { BlogLikeEntity } from "src/modules/blog/entities/like.enitity";
-import { BlogBookmarkEntity } from "src/modules/blog/entities/bookmark.enitity";
-import { BlogCommentEntity } from "src/modules/blog/entities/comment.enitity";
+import { BlogLikeEntity } from "src/modules/blog/entities/like.entity";
+import { BlogBookmarkEntity } from "src/modules/blog/entities/bookmark.entity";
+import { BlogCommentEntity } from "src/modules/blog/entities/comment.entity";
 @Entity(EntityEnum.USER)
 export class UserEntity extends BaseEntity {
   @Column({ unique: true, nullable: true })
@@ -26,9 +26,9 @@ export class UserEntity extends BaseEntity {
   new_email: string;
   @Column({ unique: true, nullable: true })
   new_phone: string;
-  @Column({ unique: true, nullable: false })
+  @Column({ default: false, nullable: true })
   varified_email: boolean;
-  @Column({ unique: true, nullable: false })
+  @Column({ default: false, nullable: true })
   varified_phone: boolean;
   @Column({ nullable: true })
   password: string;
@@ -42,13 +42,13 @@ export class UserEntity extends BaseEntity {
   @OneToOne(() => ProfileEntity, (profile) => profile.user, { nullable: true })
   @JoinColumn()
   profile: ProfileEntity;
-  @OneToMany(() => BlogEntity, (blog) => blog.author)
+  @OneToMany(() => BlogEntity, blog => blog.author)
   blogs: BlogEntity[];
-  @OneToMany(() => BlogLikeEntity, (like) => like.user)
+  @OneToMany(() => BlogLikeEntity, like => like.user)
   blog_likes: BlogLikeEntity[];
-  @OneToMany(() => BlogBookmarkEntity, (bookmark) => bookmark.user)
+  @OneToMany(() => BlogBookmarkEntity, bookmark => bookmark.user)
   blog_bookmarks: BlogBookmarkEntity[];
-  @OneToMany(() => BlogCommentEntity, (comment) => comment.user)
+  @OneToMany(() => BlogCommentEntity, comment => comment.user)
   blog_comments: BlogCommentEntity[];
   @CreateDateColumn()
   created_at: Date;
