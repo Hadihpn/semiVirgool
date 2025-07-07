@@ -12,6 +12,7 @@ import { UserEntity } from "src/modules/user/entities/user.entity";
 import { BlogLikeEntity } from "./like.entity";
 import { BlogBookmarkEntity } from "./bookmark.entity";
 import { BlogCommentEntity } from "./comment.entity";
+import { BlogCategoryEntity } from "./blog-category.enitity";
 
 @Entity(EntityEnum.Blog)
 export class BlogEntity extends BaseEntity {
@@ -33,6 +34,8 @@ export class BlogEntity extends BaseEntity {
   authorId: number;
   @ManyToOne(() => UserEntity, (user) => user.blogs, { onDelete: "CASCADE" })
   author: UserEntity;
+  @OneToMany(() => BlogCategoryEntity, blogCategory=> blogCategory.blog)
+  categories: BlogCategoryEntity[];
   @OneToMany(() => BlogLikeEntity, (like) => like.blog)
   likes: BlogLikeEntity[];
   @OneToMany(() => BlogBookmarkEntity, (bookmark) => bookmark.blog)

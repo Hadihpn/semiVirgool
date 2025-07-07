@@ -1,6 +1,7 @@
 import { BaseEntity } from "src/common/abstracts/base.entity";
 import { EntityEnum } from "src/common/enum/entity.enum";
-import { Column, Entity } from "typeorm";
+import { BlogCategoryEntity } from "src/modules/blog/entities/blog-category.enitity";
+import { Column, Entity, OneToMany } from "typeorm";
 
 @Entity(EntityEnum.Category)
 export class CategoryEntity extends BaseEntity {
@@ -10,4 +11,6 @@ export class CategoryEntity extends BaseEntity {
   slug: string;
   @Column({ nullable: true })
   priority: number;
+  @OneToMany(()=>BlogCategoryEntity,blogCategory=>blogCategory.category)
+  blog_categories:BlogCategoryEntity[]
 }
