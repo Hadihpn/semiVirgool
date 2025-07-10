@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Inject,
   Injectable,
+  NotFoundException,
   Scope,
   UnauthorizedException,
 } from "@nestjs/common";
@@ -13,7 +14,12 @@ import { make_slug } from "src/common/utils/slugify.util";
 import { REQUEST } from "@nestjs/core";
 import { Request } from "express";
 import { BlogStatusEnum } from "./enum/status.enum";
-import { AuthMessage, BadRequestMessage, PublicMessage } from "src/common/enum/message.enum";
+import {
+  AuthMessage,
+  BadRequestMessage,
+  NotFoundMessage,
+  PublicMessage,
+} from "src/common/enum/message.enum";
 import { randomId } from "src/common/utils/function.util";
 import { PaginationDto } from "src/common/dtos/pagination.dto";
 import {
@@ -23,6 +29,7 @@ import {
 import { CategoryService } from "../category/category.service";
 import { isArray } from "class-validator";
 import { BlogCategoryEntity } from "./entities/blog-category.entity";
+import { EntityEnum } from "src/common/enum/entity.enum";
 
 @Injectable({ scope: Scope.REQUEST })
 export class BlogService {
@@ -41,7 +48,7 @@ export class BlogService {
     if (typeof categories === "string") {
       categories = categories.split(",");
     } else if (!isArray(categories)) {
-      throw  new BadRequestException(BadRequestMessage.InValidCategoryData)
+      throw new BadRequestException(BadRequestMessage.InValidCategoryData);
     }
 
     let slugData = slug ?? title;
@@ -87,40 +94,71 @@ export class BlogService {
       },
     });
   }
-  async blogsList(paginationDto: PaginationDto,filterDto:FilterBlogDto) {
+  async blogsList(paginationDto: PaginationDto, filterDto: FilterBlogDto) {
     const { page, limit, skip } = PaginationSolver(paginationDto);
-    const {category}=filterDto;
-    const where:FindOptionsWhere<BlogEntity> = {}
-    if(category){
-      where.categories = {
-        category: {
-          title: category,
-        },
-      };
+    let { category, search } = filterDto;
+    // const where:FindOptionsWhere<BlogEntity> = {}
+    let where = "";
+    if (category) {
+      category = category.trim().toLowerCase();
+      if (where.length > 0) where += " AND ";
+      where += `category.title = LOWER(:category)`;
+      // where.categories = {
+      //   category: {
+      //     title: category,
+      //   },
+      // };
     }
-    const [blogs, count] = await this.blogRepository.findAndCount({
-      relations:{
-        categories:true
-      },
-      where,
-      order: {
-        id: "DESC",
-      },
-      select:{
-        categories:{
-          id: true,
-          category: {
-            id: true,
-            title: true,
-          },
-        }
-      },
-      skip,
-      take: limit,
-    });
+    if (search) {
+      if (where.length > 0) where += " AND ";
+      search = `%${search}%`;
+      where += "CONCAT(blog.title, blog.description) ILIKE :search";
+    }
+    const [blogs, count] = await this.blogRepository
+      .createQueryBuilder(EntityEnum.Blog)
+      .leftJoin("blog.categories", "categories")
+      .leftJoin("categories.category", "category")
+      .addSelect(["categories.id", "category.title"])
+      .where(where, { category, search })
+      .orderBy("blog.id", "DESC")
+      .skip(skip)
+      .take(limit)
+      .getManyAndCount();
+    // await this.blogRepository.findAndCount({
+    //   relations:{
+    //     categories:true
+    //   },
+    //   where,
+    //   order: {
+    //     id: "DESC",
+    //   },
+    //   select:{
+    //     categories:{
+    //       id: true,
+    //       category: {
+    //         id: true,
+    //         title: true,
+    //       },
+    //     }
+    //   },
+    //   skip,
+    //   take: limit,
+    // });
     return {
       pagination: PaginationGenerator(count, page, limit),
       blogs,
     };
+  }
+  async findBlogById(id: number) {
+    const blog = this.blogRepository.findOneBy({ id });
+    if (!blog) throw new NotFoundException(NotFoundMessage.NotFoundPost);
+    return blog;
+  }
+  async delete(id){
+    await this.findBlogById(id);
+    await this.blogRepository.delete({id});
+    return {
+      message:PublicMessage.Deleted
+    }
   }
 }
