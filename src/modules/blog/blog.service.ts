@@ -7,8 +7,8 @@ import {
 } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { BlogEntity } from "./entities/blog.entity";
-import { Repository } from "typeorm";
-import { CreateBlogDto } from "./dto/blog.dto";
+import { FindOptionsWhere, Repository } from "typeorm";
+import { CreateBlogDto, FilterBlogDto } from "./dto/blog.dto";
 import { make_slug } from "src/common/utils/slugify.util";
 import { REQUEST } from "@nestjs/core";
 import { Request } from "express";
@@ -87,12 +87,33 @@ export class BlogService {
       },
     });
   }
-  async blogsList(paginationDto: PaginationDto) {
+  async blogsList(paginationDto: PaginationDto,filterDto:FilterBlogDto) {
     const { page, limit, skip } = PaginationSolver(paginationDto);
+    const {category}=filterDto;
+    const where:FindOptionsWhere<BlogEntity> = {}
+    if(category){
+      where.categories = {
+        category: {
+          title: category,
+        },
+      };
+    }
     const [blogs, count] = await this.blogRepository.findAndCount({
-      where: {},
+      relations:{
+        categories:true
+      },
+      where,
       order: {
         id: "DESC",
+      },
+      select:{
+        categories:{
+          id: true,
+          category: {
+            id: true,
+            title: true,
+          },
+        }
       },
       skip,
       take: limit,
