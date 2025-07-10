@@ -35,7 +35,17 @@ export class CategoryService {
       message: PublicMessage.Created,
     };
   }
-
+  async insertByTitle(categoryTitle: string) {
+    let category: CategoryEntity | null;
+    category = await this.categoryRepository.findOneBy({
+      title: categoryTitle,
+    });
+    if (!category) {
+      category = await this.categoryRepository.create({ title: categoryTitle });
+      await this.categoryRepository.save(category);
+    }
+    return category;
+  }
   async findAll(paginationDto: PaginationDto) {
     const { limit, page, skip } = PaginationSolver(paginationDto);
     const [categories, count] = await this.categoryRepository.findAndCount({
@@ -56,16 +66,19 @@ export class CategoryService {
     return category;
   }
 
- async update(id: number, updateCategoryDto: UpdateCategoryDto) {
-    const category = await this.findOne(id)
-    const {title,priority}=updateCategoryDto;
-    if(title && title.trim()===""){
-      category.title = title.trim().toLowerCase()
+  async findByTitle(title: string) {
+    return await this.categoryRepository.findOneBy({ title });
+  }
+  async update(id: number, updateCategoryDto: UpdateCategoryDto) {
+    const category = await this.findOne(id);
+    const { title, priority } = updateCategoryDto;
+    if (title && title.trim() === "") {
+      category.title = title.trim().toLowerCase();
     }
-     if(priority ){
-      category.priority = priority
+    if (priority) {
+      category.priority = priority;
     }
-    await this.categoryRepository.save(category)
+    await this.categoryRepository.save(category);
     return {
       message: PublicMessage.Updated,
     };

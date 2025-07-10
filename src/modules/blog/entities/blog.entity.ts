@@ -12,7 +12,7 @@ import { UserEntity } from "src/modules/user/entities/user.entity";
 import { BlogLikeEntity } from "./like.entity";
 import { BlogBookmarkEntity } from "./bookmark.entity";
 import { BlogCommentEntity } from "./comment.entity";
-import { BlogCategoryEntity } from "./blog-category.enitity";
+import { BlogCategoryEntity } from "./blog-category.entity";
 
 @Entity(EntityEnum.Blog)
 export class BlogEntity extends BaseEntity {

@@ -15,6 +15,7 @@ import { SkipAuth } from "src/common/decorator/skipAuth.ecorator";
 export class BlogController {
   constructor(private readonly blogService: BlogService) {}
   @Post("create_blog")
+  @SkipAuth()
   @ApiConsumes(SwaggerConsumes.UrlEncoded, SwaggerConsumes.Json)
   createBlog(@Body() blogDto: CreateBlogDto) {
     return this.blogService.createBlog(blogDto);

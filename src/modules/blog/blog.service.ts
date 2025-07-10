@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Inject,
   Injectable,
   Scope,
@@ -12,21 +13,37 @@ import { make_slug } from "src/common/utils/slugify.util";
 import { REQUEST } from "@nestjs/core";
 import { Request } from "express";
 import { BlogStatusEnum } from "./enum/status.enum";
-import { AuthMessage, PublicMessage } from "src/common/enum/message.enum";
+import { AuthMessage, BadRequestMessage, PublicMessage } from "src/common/enum/message.enum";
 import { randomId } from "src/common/utils/function.util";
 import { PaginationDto } from "src/common/dtos/pagination.dto";
-import { PaginationGenerator, PaginationSolver } from "src/common/utils/pagination.util";
+import {
+  PaginationGenerator,
+  PaginationSolver,
+} from "src/common/utils/pagination.util";
+import { CategoryService } from "../category/category.service";
+import { isArray } from "class-validator";
+import { BlogCategoryEntity } from "./entities/blog-category.entity";
 
 @Injectable({ scope: Scope.REQUEST })
 export class BlogService {
   constructor(
     @InjectRepository(BlogEntity)
     private blogRepository: Repository<BlogEntity>,
-    @Inject(REQUEST) private request: Request
+    @InjectRepository(BlogCategoryEntity)
+    private blogCategoryRepository: Repository<BlogCategoryEntity>,
+    @Inject(REQUEST) private request: Request,
+    private categoryService: CategoryService
   ) {}
   async createBlog(blogDto: CreateBlogDto) {
     const user = this.request.user!;
-    let { title, slug, description, image, time_for_study } = blogDto;
+    let { title, slug, description, image, time_for_study, categories } =
+      blogDto;
+    if (typeof categories === "string") {
+      categories = categories.split(",");
+    } else if (!isArray(categories)) {
+      throw  new BadRequestException(BadRequestMessage.InValidCategoryData)
+    }
+
     let slugData = slug ?? title;
     blogDto.slug = make_slug(slugData);
     const isExist = await this.checkBlogBySlug(slug);
@@ -35,7 +52,7 @@ export class BlogService {
     }
     blogDto.title = title.trim();
 
-    const blog = await this.blogRepository.create({
+    let blog = await this.blogRepository.create({
       title: blogDto.title,
       description,
       image,
@@ -44,7 +61,14 @@ export class BlogService {
       slug: blogDto.slug,
       authorId: user.id,
     });
-    await this.blogRepository.save(blog);
+    blog = await this.blogRepository.save(blog);
+    for (const categoryTitle of categories) {
+      let category = await this.categoryService.insertByTitle(categoryTitle);
+      await this.blogCategoryRepository.create({
+        blogId: blog.id,
+        categoryId: category.id,
+      });
+    }
     return {
       message: PublicMessage.Created,
     };
@@ -63,19 +87,19 @@ export class BlogService {
       },
     });
   }
-  async blogsList(paginationDto:PaginationDto) {
-    const {page,limit,skip} = PaginationSolver(paginationDto);
-    const [blogs,count] = await this.blogRepository.findAndCount({
+  async blogsList(paginationDto: PaginationDto) {
+    const { page, limit, skip } = PaginationSolver(paginationDto);
+    const [blogs, count] = await this.blogRepository.findAndCount({
       where: {},
       order: {
         id: "DESC",
       },
       skip,
-      take:limit
+      take: limit,
     });
     return {
-        pagination:PaginationGenerator(count,page,limit),
-        blogs
-    }
+      pagination: PaginationGenerator(count, page, limit),
+      blogs,
+    };
   }
 }

@@ -1,6 +1,7 @@
 export enum BadRequestMessage {
   InValidLoginData = "entered Input is not valid",
-  InValidRegisterData = "eenter valid data",
+  InValidRegisterData = "enter valid data",
+  InValidCategoryData = "enter valid category",
 }
 export enum AuthMessage {
   NotFoundAccount = "not found account",
