@@ -30,6 +30,7 @@ import { CategoryService } from "../category/category.service";
 import { isArray } from "class-validator";
 import { BlogCategoryEntity } from "./entities/blog-category.entity";
 import { EntityEnum } from "src/common/enum/entity.enum";
+import { BlogLikeEntity } from "./entities/like.entity";
 
 @Injectable({ scope: Scope.REQUEST })
 export class BlogService {
@@ -38,6 +39,8 @@ export class BlogService {
     private blogRepository: Repository<BlogEntity>,
     @InjectRepository(BlogCategoryEntity)
     private blogCategoryRepository: Repository<BlogCategoryEntity>,
+    @InjectRepository(BlogLikeEntity)
+    private blogLikeRepository: Repository<BlogLikeEntity>,
     @Inject(REQUEST) private request: Request,
     private categoryService: CategoryService
   ) {}
@@ -154,57 +157,77 @@ export class BlogService {
     if (!blog) throw new NotFoundException(NotFoundMessage.NotFoundPost);
     return blog;
   }
-  async delete(id){
+  async delete(id) {
     await this.findBlogById(id);
-    await this.blogRepository.delete({id});
+    await this.blogRepository.delete({ id });
     return {
-      message:PublicMessage.Deleted
-    }
+      message: PublicMessage.Deleted,
+    };
   }
- async update(id: number, blogDto: UpdateBlogDto) {
-        const user = this.request.user;
-        let { title, slug, description, image, time_for_study, categories } = blogDto;
-        const blog = await this.findBlogById(id);
-        if(!blog) throw new NotFoundException(NotFoundMessage.NotFoundPost)
-        if (!isArray(categories) && typeof categories === "string") {
-            categories = categories.split(",")
-        } else if (!isArray(categories)) {
-            throw new BadRequestException(BadRequestMessage.InValidCategoryData)
-        }
-        let slugData:string|null=null;
-        if (title) {
-            slugData = title;
-            blog.title = title;
-        }
-        if (slug) slugData = slug;
-
-        if (slugData) {
-            slug = make_slug(slugData);
-            const isExist = await this.checkBlogBySlug(slug!);
-            if (isExist && isExist.id !== id) {
-                slug += `-${randomId()}`
-            }
-            blog.slug = slug!;
-        }
-        if (description) blog.description = description;
-        if (image) blog.image = image;
-        if (time_for_study) blog.time_for_study = time_for_study;
-        await this.blogRepository.save(blog);
-        if (categories && isArray(categories) && categories.length > 0) {
-            await this.blogCategoryRepository.delete({ blogId: blog.id });
-        }
-        for (const categoryTitle of categories) {
-            let category = await this.categoryService.findByTitle(categoryTitle)
-            if (!category) {
-                category = await this.categoryService.insertByTitle(categoryTitle)
-            }
-            await this.blogCategoryRepository.insert({
-                blogId: blog.id,
-                categoryId: category.id
-            });
-        }
-        return {
-            message: PublicMessage.Updated
-        }
+  async update(id: number, blogDto: UpdateBlogDto) {
+    const user = this.request.user;
+    let { title, slug, description, image, time_for_study, categories } =
+      blogDto;
+    const blog = await this.findBlogById(id);
+    if (!blog) throw new NotFoundException(NotFoundMessage.NotFoundPost);
+    if (!isArray(categories) && typeof categories === "string") {
+      categories = categories.split(",");
+    } else if (!isArray(categories)) {
+      throw new BadRequestException(BadRequestMessage.InValidCategoryData);
     }
+    let slugData: string | null = null;
+    if (title) {
+      slugData = title;
+      blog.title = title;
+    }
+    if (slug) slugData = slug;
+
+    if (slugData) {
+      slug = make_slug(slugData);
+      const isExist = await this.checkBlogBySlug(slug!);
+      if (isExist && isExist.id !== id) {
+        slug += `-${randomId()}`;
+      }
+      blog.slug = slug!;
+    }
+    if (description) blog.description = description;
+    if (image) blog.image = image;
+    if (time_for_study) blog.time_for_study = time_for_study;
+    await this.blogRepository.save(blog);
+    if (categories && isArray(categories) && categories.length > 0) {
+      await this.blogCategoryRepository.delete({ blogId: blog.id });
+    }
+    for (const categoryTitle of categories) {
+      let category = await this.categoryService.findByTitle(categoryTitle);
+      if (!category) {
+        category = await this.categoryService.insertByTitle(categoryTitle);
+      }
+      await this.blogCategoryRepository.insert({
+        blogId: blog.id,
+        categoryId: category.id,
+      });
+    }
+    return {
+      message: PublicMessage.Updated,
+    };
+  }
+  async likeToggle(blogId: number) {
+    let message = PublicMessage.LikeBlog;
+    const { id: userId } = this.request.user!;
+    if (!userId) throw new UnauthorizedException(AuthMessage.LoginRequired);
+    const blog = await this.findBlogById(blogId);
+    let blogLike = await this.blogLikeRepository.findOneBy({
+      blogId,
+      userId: userId,
+    });
+    if (blogLike) {
+      await this.blogLikeRepository.delete(blogLike);
+      message = PublicMessage.DisLikeBlog;
+    } else {
+      await this.blogLikeRepository.insert({ blogId, userId: userId });
+    }
+    return {
+      message
+    };
+  }
 }

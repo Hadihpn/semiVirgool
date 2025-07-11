@@ -22,6 +22,8 @@ export enum PublicMessage {
   Updated="Object updated successfully",
   Inserted="Object inserted successfully",
   SomethingWrong = "something wrong.",
+  LikeBlog = "you liked this blog.",
+  DisLikeBlog = "you disliked this blog.",
 }
 
 export enum NotFoundMessage {
