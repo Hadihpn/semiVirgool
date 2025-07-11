@@ -26,9 +26,8 @@ import { CommentService } from "../services/comment.service";
 export class CommentController {
   constructor(private readonly commentService: CommentService) {}
   @Post("create_comment")
-  @SkipAuth()
   @ApiConsumes(SwaggerConsumes.UrlEncoded, SwaggerConsumes.Json)
-  createBlog(@Body() commentDto: CreateCommentDto) {
+  createComment(@Body() commentDto: CreateCommentDto) {
     return this.commentService.createComment(commentDto);
   }
   

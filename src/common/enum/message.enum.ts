@@ -17,30 +17,32 @@ export enum AuthMessage {
 export enum PublicMessage {
   LoggedIn = "you logged in sucessfully",
   LoggedOut = "you logged out sucessfully",
-  Created="Object created successfully",
-  Deleted="Object deleted successfully",
-  Updated="Object updated successfully",
-  Inserted="Object inserted successfully",
+  Created = "Object created successfully",
+  Deleted = "Object deleted successfully",
+  Updated = "Object updated successfully",
+  Inserted = "Object inserted successfully",
   SomethingWrong = "something wrong.",
   LikeBlog = "you liked this blog.",
   DisLikeBlog = "you disliked this blog.",
   BookmarkBlog = "you bookmarked this blog.",
   DisBookmarkBlog = "you disBookmarked this blog.",
-  CreatedComment = "you commented successfully"
+  CreatedComment = "you commented successfully",
 }
-
+export enum CommentMessage {
+  AccepetComment = "the comment accepted successfully",
+  RejectComment = "the comment rejected successfully",
+}
 export enum NotFoundMessage {
-  NotFound="can not find this object",
-  NotFoundCategory="can not find this category",
-  NotFoundPost="can not find this Post",
-  NotFoundUser="can not find this User"
+  NotFound = "can not find this object",
+  NotFoundCategory = "can not find this category",
+  NotFoundPost = "can not find this Post",
+  NotFoundUser = "can not find this User",
+  NotFoundComment = "can not find this Comment",
 }
 export enum ValidationMessage {
-  InvalidImageFormat="image format must be png , jpg or jpeg",
-  InavalidEmailFormat="please enter the valid email",
-  InavalidPhoneFormat="please enter the valid phone number",
-  
-
+  InvalidImageFormat = "image format must be png , jpg or jpeg",
+  InavalidEmailFormat = "please enter the valid email",
+  InavalidPhoneFormat = "please enter the valid phone number",
 }
 export enum ConflictMessage {
   Category = "category title has been existed",

@@ -135,8 +135,11 @@ export class BlogService {
       .where(where, { category, search })
       .loadRelationCountAndMap("blog.likes", "blog.likes")
       .loadRelationCountAndMap("blog.bookmarks", "blog.bookmarks")
-      .loadRelationCountAndMap("blog.comments", "blog.comments","comments",qb=>
-        qb.where("comments.accepted = : accepted",{accepted:true})
+      .loadRelationCountAndMap(
+        "blog.comments",
+        "blog.comments",
+        "comments",
+        (qb) => qb.where("comments.accepted = : accepted", { accepted: true })
       )
       .orderBy("blog.id", "DESC")
       .skip(skip)
@@ -275,5 +278,40 @@ export class BlogService {
     const { id: userId } = this.request.user!;
     if (!userId) throw new UnauthorizedException(AuthMessage.LoginRequired);
     return userId;
+  }
+  async findOneBySlug(slug: string) {
+    const userId = await this.checkLogin();
+    const blog = await this.blogRepository
+      .createQueryBuilder(EntityEnum.Blog)
+      .leftJoin("blog.categories", "categories")
+      .leftJoin("categories.category", "category")
+      .leftJoin("blog.author", "author")
+      .addSelect([
+        "categories.id",
+        "category.title",
+        "author.user-name",
+        "author.id",
+        "profile.nick_name",
+      ])
+      .where({ slug })
+      .loadRelationCountAndMap("blog.likes", "blog.likes")
+      .loadRelationCountAndMap("blog.bookmarks", "blog.bookmarks")
+      .leftJoinAndSelect(
+        "blog.comments",
+        "comments",
+        "comments.accepted=:accepted",
+        { accepted: true }
+      )
+      .getOne();
+    if (!blog) throw new NotFoundException(NotFoundMessage.NotFound);
+    const isLiked = !!(await this.blogLikeRepository.findOneBy({
+      userId,
+      blogId: blog?.id,
+    }));
+    const isBookmarked = !!(await this.blogBookmarkRepository.findOneBy({
+      userId,
+      blogId: blog?.id,
+    }));
+    return { isLiked, isBookmarked, ...blog };
   }
 }

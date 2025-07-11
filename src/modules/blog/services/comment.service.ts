@@ -6,6 +6,12 @@ import { BlogCommentEntity } from "../entities/comment.entity";
 import { REQUEST } from "@nestjs/core";
 import { CreateCommentDto } from "../dto/comment.to";
 import { BlogService } from "./blog.service";
+import { CommentMessage, NotFoundMessage, PublicMessage } from "src/common/enum/message.enum";
+import { PaginationDto } from "src/common/dtos/pagination.dto";
+import {
+  PaginationGenerator,
+  PaginationSolver,
+} from "src/common/utils/pagination.util";
 
 @Injectable({ scope: Scope.REQUEST })
 export class CommentService {
@@ -36,5 +42,57 @@ export class CommentService {
       parentId: parent ? parentId : null,
       userId,
     });
+    return {
+      message: PublicMessage.CreatedComment,
+    };
+  }
+  async getComments(paginationDto: PaginationDto) {
+    const { page, limit, skip } = PaginationSolver(paginationDto);
+    const [comments, count] = await this.blogCommentRepository.findAndCount({
+      where: {},
+      relations: {
+        blog: true,
+        user: { profile: true },
+      },
+      select: {
+        blog: {
+          title: true,
+        },
+        user: {
+          user_name: true,
+          profile: {
+            nick_name: true,
+          },
+        },
+      },
+      skip,
+      take: limit,
+      order: { id: "DESC" },
+    });
+    return {
+      pagination: PaginationGenerator(count, page, limit),
+      comments,
+    };
+  }
+  async findCommentById(commentId: number) {
+    const comment = await this.blogCommentRepository.findOneBy({
+      id: commentId,
+    });
+    if (!comment) throw new NotFoundException(NotFoundMessage.NotFoundComment);
+    return comment;
+  }
+  async toggleCommentAcception(commentId: number) {
+    const comment =await this.findCommentById(commentId);
+    let message;
+    if(comment?.accepted){
+        comment.accepted = false
+        message = CommentMessage.RejectComment
+    }else{
+        comment.accepted = true
+        message = CommentMessage.AccepetComment
+    }
+    return {
+        message
+    }
   }
 }

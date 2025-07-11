@@ -47,6 +47,10 @@ export class BlogController {
   ) {
     return this.blogService.blogsList(paginationDto, filterDto);
   }
+  @Get("by-slug/:slug")
+  findBuSlug(@Param("slug") slug: string) {
+    return this.blogService.findOneBySlug(slug);
+  }
   @Delete(":id")
   deleteBlog(@Param("id", ParseIntPipe) id: number) {
     return this.blogService.delete(id);
