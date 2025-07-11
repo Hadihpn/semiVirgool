@@ -7,13 +7,13 @@ import {
   UnauthorizedException,
 } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { BlogEntity } from "./entities/blog.entity";
+import { BlogEntity } from "../entities/blog.entity";
 import { FindOptionsWhere, Repository } from "typeorm";
-import { CreateBlogDto, FilterBlogDto, UpdateBlogDto } from "./dto/blog.dto";
+import { CreateBlogDto, FilterBlogDto, UpdateBlogDto } from "../dto/blog.dto";
 import { make_slug } from "src/common/utils/slugify.util";
 import { REQUEST } from "@nestjs/core";
 import { Request } from "express";
-import { BlogStatusEnum } from "./enum/status.enum";
+import { BlogStatusEnum } from "../enum/status.enum";
 import {
   AuthMessage,
   BadRequestMessage,
@@ -26,12 +26,12 @@ import {
   PaginationGenerator,
   PaginationSolver,
 } from "src/common/utils/pagination.util";
-import { CategoryService } from "../category/category.service";
+import { CategoryService } from "../../category/category.service";
 import { isArray } from "class-validator";
-import { BlogCategoryEntity } from "./entities/blog-category.entity";
+import { BlogCategoryEntity } from "../entities/blog-category.entity";
 import { EntityEnum } from "src/common/enum/entity.enum";
-import { BlogLikeEntity } from "./entities/like.entity";
-import { BlogBookmarkEntity } from "./entities/bookmark.entity";
+import { BlogLikeEntity } from "../entities/like.entity";
+import { BlogBookmarkEntity } from "../entities/bookmark.entity";
 
 @Injectable({ scope: Scope.REQUEST })
 export class BlogService {

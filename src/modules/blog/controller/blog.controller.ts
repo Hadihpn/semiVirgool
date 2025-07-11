@@ -10,16 +10,17 @@ import {
   Query,
   UseGuards,
 } from "@nestjs/common";
-import { BlogService } from "./blog.service";
-import { CreateBlogDto, FilterBlogDto, UpdateBlogDto } from "./dto/blog.dto";
+
+import { CreateBlogDto, FilterBlogDto, UpdateBlogDto } from "../dto/blog.dto";
 import { make_slug } from "src/common/utils/slugify.util";
 import { ApiBearerAuth, ApiConsumes } from "@nestjs/swagger";
 import { SwaggerConsumes } from "src/common/enum/swagger-consumes.enums";
-import { AuthGuard } from "../auth/guards/auth.guard";
+import { AuthGuard } from "../../auth/guards/auth.guard";
 import { Pagination } from "src/common/decorator/pagination.decorator";
 import { PaginationDto } from "src/common/dtos/pagination.dto";
 import { SkipAuth } from "src/common/decorator/skipAuth.ecorator";
 import { FilterBlog } from "src/common/decorator/filter.decorator";
+import { BlogService } from "../services/blog.service";
 
 @Controller("blog")
 @UseGuards(AuthGuard)
@@ -66,8 +67,8 @@ export class BlogController {
     return this.blogService.bookmarkToggle(id);
   }
   @Get("likesCount/:id")
-   @ApiConsumes(SwaggerConsumes.UrlEncoded, SwaggerConsumes.Json)
-   getBlogLike(@Param("id",ParseIntPipe) id:number){
+  @ApiConsumes(SwaggerConsumes.UrlEncoded, SwaggerConsumes.Json)
+  getBlogLike(@Param("id", ParseIntPipe) id: number) {
     return this.blogService.likesCount(id);
-   }
+  }
 }

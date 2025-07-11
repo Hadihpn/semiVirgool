@@ -26,6 +26,7 @@ export enum PublicMessage {
   DisLikeBlog = "you disliked this blog.",
   BookmarkBlog = "you bookmarked this blog.",
   DisBookmarkBlog = "you disBookmarked this blog.",
+  CreatedComment = "you commented successfully"
 }
 
 export enum NotFoundMessage {
