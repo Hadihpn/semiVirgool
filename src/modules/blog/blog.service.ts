@@ -31,6 +31,7 @@ import { isArray } from "class-validator";
 import { BlogCategoryEntity } from "./entities/blog-category.entity";
 import { EntityEnum } from "src/common/enum/entity.enum";
 import { BlogLikeEntity } from "./entities/like.entity";
+import { BlogBookmarkEntity } from "./entities/bookmark.entity";
 
 @Injectable({ scope: Scope.REQUEST })
 export class BlogService {
@@ -41,6 +42,8 @@ export class BlogService {
     private blogCategoryRepository: Repository<BlogCategoryEntity>,
     @InjectRepository(BlogLikeEntity)
     private blogLikeRepository: Repository<BlogLikeEntity>,
+    @InjectRepository(BlogBookmarkEntity)
+    private blogBookmarkRepository: Repository<BlogBookmarkEntity>,
     @Inject(REQUEST) private request: Request,
     private categoryService: CategoryService
   ) {}
@@ -122,9 +125,16 @@ export class BlogService {
       .leftJoin("blog.categories", "categories")
       .leftJoin("categories.category", "category")
       .leftJoin("blog.author", "author")
-      .addSelect(["categories.id", "category.title","author.user-name","author.id","profile.nick_name"])
+      .addSelect([
+        "categories.id",
+        "category.title",
+        "author.user-name",
+        "author.id",
+        "profile.nick_name",
+      ])
       .where(where, { category, search })
-      .loadRelationCountAndMap("blog.likes","blog.likes")
+      .loadRelationCountAndMap("blog.likes", "blog.likes")
+      .loadRelationCountAndMap("blog.bookmarks", "blog.bookmarks")
       .orderBy("blog.id", "DESC")
       .skip(skip)
       .take(limit)
@@ -226,6 +236,24 @@ export class BlogService {
       message = PublicMessage.DisLikeBlog;
     } else {
       await this.blogLikeRepository.insert({ blogId, userId: userId });
+    }
+    return {
+      message,
+    };
+  }
+  async bookmarkToggle(blogId: number) {
+    let message = PublicMessage.BookmarkBlog;
+    const userId = await this.checkLogin();
+    const blog = await this.findBlogById(blogId);
+    let blogBookmark = await this.blogBookmarkRepository.findOneBy({
+      blogId,
+      userId: userId,
+    });
+    if (blogBookmark) {
+      await this.blogBookmarkRepository.delete(blogBookmark);
+      message = PublicMessage.DisBookmarkBlog;
+    } else {
+      await this.blogBookmarkRepository.insert({ blogId, userId: userId });
     }
     return {
       message,

@@ -60,6 +60,11 @@ export class BlogController {
   likeToggle(@Param("id", ParseIntPipe) id: number) {
     return this.blogService.likeToggle(id);
   }
+  @Put("bookmark/:id")
+  @ApiConsumes(SwaggerConsumes.UrlEncoded, SwaggerConsumes.Json)
+  likeBookmark(@Param("id", ParseIntPipe) id: number) {
+    return this.blogService.bookmarkToggle(id);
+  }
   @Get("likesCount/:id")
    @ApiConsumes(SwaggerConsumes.UrlEncoded, SwaggerConsumes.Json)
    getBlogLike(@Param("id",ParseIntPipe) id:number){
