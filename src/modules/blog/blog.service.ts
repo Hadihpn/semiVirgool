@@ -121,8 +121,10 @@ export class BlogService {
       .createQueryBuilder(EntityEnum.Blog)
       .leftJoin("blog.categories", "categories")
       .leftJoin("categories.category", "category")
-      .addSelect(["categories.id", "category.title"])
+      .leftJoin("blog.author", "author")
+      .addSelect(["categories.id", "category.title","author.user-name","author.id","profile.nick_name"])
       .where(where, { category, search })
+      .loadRelationCountAndMap("blog.likes","blog.likes")
       .orderBy("blog.id", "DESC")
       .skip(skip)
       .take(limit)
@@ -213,8 +215,7 @@ export class BlogService {
   }
   async likeToggle(blogId: number) {
     let message = PublicMessage.LikeBlog;
-    const { id: userId } = this.request.user!;
-    if (!userId) throw new UnauthorizedException(AuthMessage.LoginRequired);
+    const userId = await this.checkLogin();
     const blog = await this.findBlogById(blogId);
     let blogLike = await this.blogLikeRepository.findOneBy({
       blogId,
@@ -227,7 +228,21 @@ export class BlogService {
       await this.blogLikeRepository.insert({ blogId, userId: userId });
     }
     return {
-      message
+      message,
     };
+  }
+  async likesCount(blogId: number) {
+    const userId = await this.checkLogin();
+    const count = await this.blogLikeRepository.countBy({ blogId });
+    const isLiked = await this.blogLikeRepository.existsBy({ blogId, userId });
+    return {
+      count,
+      isLiked,
+    };
+  }
+  async checkLogin() {
+    const { id: userId } = this.request.user!;
+    if (!userId) throw new UnauthorizedException(AuthMessage.LoginRequired);
+    return userId;
   }
 }
