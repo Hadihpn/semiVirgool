@@ -1,12 +1,22 @@
-import { Inject, Injectable, NotFoundException, Scope } from "@nestjs/common";
+import {
+  forwardRef,
+  Inject,
+  Injectable,
+  NotFoundException,
+  Scope,
+} from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { BlogEntity } from "../entities/blog.entity";
-import { Repository } from "typeorm";
+import { IsNull, Repository } from "typeorm";
 import { BlogCommentEntity } from "../entities/comment.entity";
 import { REQUEST } from "@nestjs/core";
 import { CreateCommentDto } from "../dto/comment.to";
 import { BlogService } from "./blog.service";
-import { CommentMessage, NotFoundMessage, PublicMessage } from "src/common/enum/message.enum";
+import {
+  CommentMessage,
+  NotFoundMessage,
+  PublicMessage,
+} from "src/common/enum/message.enum";
 import { PaginationDto } from "src/common/dtos/pagination.dto";
 import {
   PaginationGenerator,
@@ -21,6 +31,7 @@ export class CommentService {
     @InjectRepository(BlogCommentEntity)
     private blogCommentRepository: Repository<BlogCommentEntity>,
     @Inject(REQUEST) private request: Request,
+    @Inject(forwardRef(() => BlogService))
     private blogService: BlogService
   ) {}
   async createComment(commentDto: CreateCommentDto) {
@@ -82,17 +93,64 @@ export class CommentService {
     return comment;
   }
   async toggleCommentAcception(commentId: number) {
-    const comment =await this.findCommentById(commentId);
+    const comment = await this.findCommentById(commentId);
     let message;
-    if(comment?.accepted){
-        comment.accepted = false
-        message = CommentMessage.RejectComment
-    }else{
-        comment.accepted = true
-        message = CommentMessage.AccepetComment
+    if (comment?.accepted) {
+      comment.accepted = false;
+      message = CommentMessage.RejectComment;
+    } else {
+      comment.accepted = true;
+      message = CommentMessage.AccepetComment;
     }
     return {
-        message
-    }
+      message,
+    };
+  }
+  async findCommentsOfBlog(blogId: number, paginationDto: PaginationDto) {
+    const { limit, page, skip } = PaginationSolver(paginationDto);
+    const [comments, count] = await this.blogCommentRepository.findAndCount({
+      where: {
+        blogId,
+        parentId: IsNull(),
+      },
+      relations: {
+        user: { profile: true },
+        children: {
+          user: { profile: true },
+          children: {
+            user: { profile: true },
+          },
+        },
+      },
+      select: {
+        parentId:true,
+        user: {
+          user_name: true,
+          profile: {
+            nick_name: true,
+          },
+        },
+        children: {
+          parentId:true,
+          user: {
+            user_name: true,
+            profile: {
+              nick_name: true,
+            },
+          },
+          children: {
+            user: {
+              user_name: true,
+              profile: {
+                nick_name: true,
+              },
+            },
+          },
+        },
+      },
+      skip,
+      take:limit
+    
+    });
   }
 }

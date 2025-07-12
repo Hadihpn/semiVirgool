@@ -30,5 +30,13 @@ export class CommentController {
   createComment(@Body() commentDto: CreateCommentDto) {
     return this.commentService.createComment(commentDto);
   }
-  
+  @Get("")
+  @Pagination()
+  find(@Query() paginationDto: PaginationDto) {
+    return this.commentService.getComments(paginationDto);
+  }
+  @Put("acception:/id")
+  acception(@Param("id", ParseIntPipe) id: number) {
+    return this.acception(id);
+  }
 }

@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  forwardRef,
   Inject,
   Injectable,
   NotFoundException,
@@ -32,6 +33,7 @@ import { BlogCategoryEntity } from "../entities/blog-category.entity";
 import { EntityEnum } from "src/common/enum/entity.enum";
 import { BlogLikeEntity } from "../entities/like.entity";
 import { BlogBookmarkEntity } from "../entities/bookmark.entity";
+import { CommentService } from "./comment.service";
 
 @Injectable({ scope: Scope.REQUEST })
 export class BlogService {
@@ -45,7 +47,8 @@ export class BlogService {
     @InjectRepository(BlogBookmarkEntity)
     private blogBookmarkRepository: Repository<BlogBookmarkEntity>,
     @Inject(REQUEST) private request: Request,
-    private categoryService: CategoryService
+    private categoryService: CategoryService,
+    private commentService: CommentService
   ) {}
   async createBlog(blogDto: CreateBlogDto) {
     const user = this.request.user!;
@@ -279,7 +282,7 @@ export class BlogService {
     if (!userId) throw new UnauthorizedException(AuthMessage.LoginRequired);
     return userId;
   }
-  async findOneBySlug(slug: string) {
+  async findOneBySlug(slug: string, paginationDto: PaginationDto) {
     const userId = await this.checkLogin();
     const blog = await this.blogRepository
       .createQueryBuilder(EntityEnum.Blog)
@@ -296,13 +299,8 @@ export class BlogService {
       .where({ slug })
       .loadRelationCountAndMap("blog.likes", "blog.likes")
       .loadRelationCountAndMap("blog.bookmarks", "blog.bookmarks")
-      .leftJoinAndSelect(
-        "blog.comments",
-        "comments",
-        "comments.accepted=:accepted",
-        { accepted: true }
-      )
       .getOne();
+
     if (!blog) throw new NotFoundException(NotFoundMessage.NotFound);
     const isLiked = !!(await this.blogLikeRepository.findOneBy({
       userId,
@@ -312,6 +310,10 @@ export class BlogService {
       userId,
       blogId: blog?.id,
     }));
-    return { isLiked, isBookmarked, ...blog };
+    const commentsData = await this.commentService.findCommentsOfBlog(
+      blog.id,
+      paginationDto
+    );
+    return { isLiked, isBookmarked, blog,commentsData };
   }
 }
