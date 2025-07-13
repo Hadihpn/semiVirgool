@@ -21,10 +21,10 @@ import { PaginationDto } from "src/common/dtos/pagination.dto";
 import { SkipAuth } from "src/common/decorator/skipAuth.ecorator";
 import { FilterBlog } from "src/common/decorator/filter.decorator";
 import { BlogService } from "../services/blog.service";
+import { AuthDecorator } from "src/common/decorator/auth.decorator";
 
 @Controller("blog")
-@UseGuards(AuthGuard)
-@ApiBearerAuth("Authorization")
+@AuthDecorator()
 export class BlogController {
   constructor(private readonly blogService: BlogService) {}
   @Post("create_blog")

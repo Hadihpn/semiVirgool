@@ -18,11 +18,11 @@ import { PaginationDto } from "src/common/dtos/pagination.dto";
 import { SkipAuth } from "src/common/decorator/skipAuth.ecorator";
 import { CreateCommentDto } from "../dto/comment.to";
 import { CommentService } from "../services/comment.service";
+import { AuthDecorator } from "src/common/decorator/auth.decorator";
 
 @Controller("blog-comment")
 @ApiTags("Blog")
-@UseGuards(AuthGuard)
-@ApiBearerAuth("Authorization")
+@AuthDecorator()
 export class CommentController {
   constructor(private readonly commentService: CommentService) {}
   @Post("create_comment")
