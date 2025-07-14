@@ -43,9 +43,10 @@ export class CategoryController {
   }
 
   @Patch(":id")
-   @ApiConsumes(SwaggerConsumes.UrlEncoded, SwaggerConsumes.Json)
+    @CanAccess(Roles.Admin)
+  @ApiConsumes(SwaggerConsumes.UrlEncoded, SwaggerConsumes.Json)
   update(
-    @Param("id",ParseIntPipe) id: number,
+    @Param("id", ParseIntPipe) id: number,
     @Body() updateCategoryDto: UpdateCategoryDto
   ) {
     return this.categoryService.update(id, updateCategoryDto);
@@ -53,8 +54,8 @@ export class CategoryController {
 
   @Delete(":id")
   @CanAccess(Roles.Admin)
-   @ApiConsumes(SwaggerConsumes.UrlEncoded, SwaggerConsumes.Json)
-  remove(@Param("id",ParseIntPipe) id: number) {
+  @ApiConsumes(SwaggerConsumes.UrlEncoded, SwaggerConsumes.Json)
+  remove(@Param("id", ParseIntPipe) id: number) {
     return this.categoryService.remove(id);
   }
 }
