@@ -29,6 +29,8 @@ import { CookieKeys } from "../auth/enums/cookie.enum";
 import { AuthMethod } from "../auth/enums/method.enum";
 import { FollowEntity } from "./entities/follow.entity";
 import { EntityEnum } from "src/common/enum/entity.enum";
+import { PaginationDto } from "src/common/dtos/pagination.dto";
+import { PaginationGenerator, PaginationSolver } from "src/common/utils/pagination.util";
 
 @Injectable({ scope: Scope.REQUEST })
 export class UserService {
@@ -56,7 +58,70 @@ export class UserService {
   findOne(id: number) {
     return `This action returns a #${id} user`;
   }
-
+  async followerList(paginationDto: PaginationDto) {
+    const userId = this.request.user?.id;
+    const { page, limit, skip } = PaginationSolver(paginationDto);
+   const [followers,count ] = await this.followRepository.findAndCount({
+      where: { followingId: userId },
+      relations: { follower: { profile: true } },
+      order: {
+        id: "DESC",
+      },
+      select: {
+          id: true,
+          follower: {
+            id: true,
+            user_name:true,
+            profile: {
+              id:true,
+              nick_name:true,
+              bio:true,
+              image_profile:true,
+              bg_image:true,
+            
+            },
+          },
+      },
+      skip,
+      take: limit,
+    });
+    return {
+      pagination: PaginationGenerator(count, page, limit),
+      followers,
+    };
+  }
+  async followingList(paginationDto: PaginationDto) {
+      const userId = this.request.user?.id;
+    const { page, limit, skip } = PaginationSolver(paginationDto);
+   const [followings,count ] = await this.followRepository.findAndCount({
+      where: { followerId: userId },
+      relations: { following: { profile: true } },
+      order: {
+        id: "DESC",
+      },
+      select: {
+          id: true,
+          following: {
+            id: true,
+            user_name:true,
+            profile: {
+              id:true,
+              nick_name:true,
+              bio:true,
+              image_profile:true,
+              bg_image:true,
+            
+            },
+          },
+      },
+      skip,
+      take: limit,
+    });
+    return {
+      pagination: PaginationGenerator(count, page, limit),
+      followings,
+    };
+  }
   update(id: number, updateUserDto: UpdateUserDto) {
     return `This action updates a #${id} user`;
   }
@@ -101,12 +166,13 @@ export class UserService {
   }
   profile() {
     const { id } = this.request.user!;
-    return this.userRepository.createQueryBuilder(EntityEnum.USER)
-    .where({id})
-    .leftJoinAndSelect("user.profile","profile")
-    .loadRelationCountAndMap("user.followers","user.followers")
-    .loadRelationCountAndMap("user.following","user.following")
-    .getOne()
+    return this.userRepository
+      .createQueryBuilder(EntityEnum.USER)
+      .where({ id })
+      .leftJoinAndSelect("user.profile", "profile")
+      .loadRelationCountAndMap("user.followers", "user.followers")
+      .loadRelationCountAndMap("user.following", "user.following")
+      .getOne();
   }
   async changeEmail(email: string) {
     const { id } = this.request.user!;

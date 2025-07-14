@@ -12,11 +12,13 @@ import {
   ParseFilePipe,
   UseGuards,
   Res,
+  ParseIntPipe,
+  Query,
 } from "@nestjs/common";
 import { UserService } from "./user.service";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
-import { ApiBearerAuth, ApiConsumes, ApiTags } from "@nestjs/swagger";
+import { ApiBearerAuth, ApiConsumes, ApiParam, ApiTags } from "@nestjs/swagger";
 import { ProfileDto } from "./dto/profile.dto";
 import { SwaggerConsumes } from "src/common/enum/swagger-consumes.enums";
 import { FileFieldsInterceptor } from "@nestjs/platform-express";
@@ -39,6 +41,8 @@ import { CookieOptionsToken } from "src/common/utils/cookie.util";
 import { AuthMessage, PublicMessage } from "src/common/enum/message.enum";
 import { CheckOtpDto } from "../auth/dto/basic.dto";
 import { AuthDecorator } from "src/common/decorator/auth.decorator";
+import { Pagination } from "src/common/decorator/pagination.decorator";
+import { PaginationDto } from "src/common/dtos/pagination.dto";
 
 @Controller("user")
 @ApiTags("User")
@@ -55,12 +59,25 @@ export class UserController {
   findAll() {
     return this.userService.findAll();
   }
-
+  @Get("follow/:followingId")
+  @ApiParam({ name: "followingId" })
+  follow(@Param("followingId", ParseIntPipe) followingId: number) {
+    return this.userService.followToggle(followingId);
+  }
   @Get(":id")
   findOne(@Param("id") id: string) {
     return this.userService.findOne(+id);
   }
-
+  @Get("followers")
+  @Pagination()
+  followers(@Query() paginationDto: PaginationDto) {
+    return this.userService.followerList(paginationDto);
+  }
+  @Get("followers")
+  @Pagination()
+  following(@Query() paginationDto: PaginationDto) {
+    return this.userService.followingList(paginationDto);
+  }
   @Patch(":id")
   update(@Param("id") id: string, @Body() updateUserDto: UpdateUserDto) {
     return this.userService.update(+id, updateUserDto);
