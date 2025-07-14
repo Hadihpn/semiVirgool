@@ -16,6 +16,8 @@ import { ApiConsumes, ApiQuery, ApiTags } from "@nestjs/swagger";
 import { SwaggerConsumes } from "src/common/enum/swagger-consumes.enums";
 import { PaginationDto } from "src/common/dtos/pagination.dto";
 import { Pagination } from "src/common/decorator/pagination.decorator";
+import { CanAccess } from "src/common/decorator/role.decorator";
+import { Roles } from "src/common/enum/roles.enum";
 
 @Controller("category")
 @ApiTags("Category")
@@ -50,6 +52,7 @@ export class CategoryController {
   }
 
   @Delete(":id")
+  @CanAccess(Roles.Admin)
    @ApiConsumes(SwaggerConsumes.UrlEncoded, SwaggerConsumes.Json)
   remove(@Param("id",ParseIntPipe) id: number) {
     return this.categoryService.remove(id);
