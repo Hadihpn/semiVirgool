@@ -43,7 +43,7 @@ export class CategoryController {
   }
 
   @Patch(":id")
-    @CanAccess(Roles.Admin)
+  @CanAccess(Roles.Admin)
   @ApiConsumes(SwaggerConsumes.UrlEncoded, SwaggerConsumes.Json)
   update(
     @Param("id", ParseIntPipe) id: number,

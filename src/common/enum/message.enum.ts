@@ -27,6 +27,8 @@ export enum PublicMessage {
   BookmarkBlog = "you bookmarked this blog.",
   DisBookmarkBlog = "you disBookmarked this blog.",
   CreatedComment = "you commented successfully",
+  Follow = "you follow successfully",
+  UnFollow = "you unfollow successfully",
 }
 export enum CommentMessage {
   AccepetComment = "the comment accepted successfully",
