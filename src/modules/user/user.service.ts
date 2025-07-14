@@ -28,6 +28,7 @@ import { OtpEntity } from "./entities/otp.entity";
 import { CookieKeys } from "../auth/enums/cookie.enum";
 import { AuthMethod } from "../auth/enums/method.enum";
 import { FollowEntity } from "./entities/follow.entity";
+import { EntityEnum } from "src/common/enum/entity.enum";
 
 @Injectable({ scope: Scope.REQUEST })
 export class UserService {
@@ -100,10 +101,12 @@ export class UserService {
   }
   profile() {
     const { id } = this.request.user!;
-    return this.userRepository.findOne({
-      where: { id },
-      relations: ["profile"],
-    });
+    return this.userRepository.createQueryBuilder(EntityEnum.USER)
+    .where({id})
+    .leftJoinAndSelect("user.profile","profile")
+    .loadRelationCountAndMap("user.followers","user.followers")
+    .loadRelationCountAndMap("user.following","user.following")
+    .getOne()
   }
   async changeEmail(email: string) {
     const { id } = this.request.user!;
