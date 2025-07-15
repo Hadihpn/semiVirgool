@@ -24,10 +24,11 @@ import { randomInt } from "crypto";
 import { ExceptionsHandler } from "@nestjs/core/exceptions/exceptions-handler";
 import { TokenService } from "./token.service";
 import { Request, Response } from "express";
-import { AuthRespone } from "./types/auth_respone";
+import { AuthRespone, GoogleUser } from "./types/auth_respone";
 import { CookieKeys } from "./enums/cookie.enum";
 import { REQUEST } from "@nestjs/core";
 import { CookieOptionsToken } from "src/common/utils/cookie.util";
+import { randomId } from "src/common/utils/function.util";
 
 @Injectable({ scope: Scope.REQUEST })
 export class AuthService {
@@ -206,4 +207,30 @@ export class AuthService {
     if (!user) throw new UnauthorizedException(AuthMessage.LoginAgain);
     return user;
   }
+   async googleAuth(userData: GoogleUser) {
+        const {email, firstName, lastName} = userData;
+        let token: string;
+        let user = await this.userRepository.findOneBy({email});
+        if(user) {
+            token = this.tokenService.createOtpToken({ userId: user.id });
+        }else {
+            user = this.userRepository.create({
+                email,
+                varified_email: true,
+                user_name: email.split("@")['0'] + randomId(),
+            });
+            user = await this.userRepository.save(user);
+            let profile = this.profileRepository.create({
+                userId: user.id,
+                nick_name: `${firstName} ${lastName}`,
+            });
+            profile = await this.profileRepository.save(profile);
+            user.profileId = profile.id;
+            await this.userRepository.save(user);
+            token = this.tokenService.createAccessToken({userId: user.id})
+        }
+        return {
+            token
+        }
+    }
 }
