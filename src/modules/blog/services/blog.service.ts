@@ -9,7 +9,7 @@ import {
 } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { BlogEntity } from "../entities/blog.entity";
-import { FindOptionsWhere, Repository } from "typeorm";
+import { DataSource, FindOptionsWhere, Repository } from "typeorm";
 import { CreateBlogDto, FilterBlogDto, UpdateBlogDto } from "../dto/blog.dto";
 import { make_slug } from "src/common/utils/slugify.util";
 import { REQUEST } from "@nestjs/core";
@@ -48,7 +48,8 @@ export class BlogService {
     private blogBookmarkRepository: Repository<BlogBookmarkEntity>,
     @Inject(REQUEST) private request: Request,
     private categoryService: CategoryService,
-    private commentService: CommentService
+    private commentService: CommentService,
+    private dataSource: DataSource
   ) {}
   async createBlog(blogDto: CreateBlogDto) {
     const user = this.request.user!;
@@ -310,10 +311,52 @@ export class BlogService {
       userId,
       blogId: blog?.id,
     }));
+
     const commentsData = await this.commentService.findCommentsOfBlog(
       blog.id,
       paginationDto
     );
-    return { isLiked, isBookmarked, blog,commentsData };
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    const suggestBlogs = await queryRunner.query(`
+            WITH suggested_blogs AS (
+                SELECT 
+                    blog.id,
+                    blog.slug,
+                    blog.title,
+                    blog.description,
+                    blog.time_for_study,
+                    blog.image,
+                    json_build_object(
+                        'username', u.username,
+                        'author_name', p.nick_name,
+                        'image', p.image_profile
+                    ) AS author,
+                    array_agg(DISTINCT cat.title) AS categories,
+                    (
+                        SELECT COUNT(*) FROM blog_likes
+                        WHERE blog_likes."blogId" = blog.id
+                    ) AS likes,
+                    (
+                        SELECT COUNT(*) FROM blog_bookmarks
+                        WHERE blog_bookmarks."blogId" = blog.id
+                    ) AS bookmarks,
+                    (
+                        SELECT COUNT(*) FROM blog_comments
+                        WHERE blog_comments."blogId" = blog.id
+                    ) AS comments
+                FROM blog
+                LEFT JOIN public.user u ON blog."authorId" = u.id
+                LEFT JOIN profile p ON p."userId" = u.id
+                LEFT JOIN blog_category bc ON blog.id = bc."blogId"
+                LEFT JOIN category cat ON bc."categoryId" = cat.id
+                GROUP BY blog.id, u.username, p.nick_name, p.image_profile
+                ORDER BY RANDOM()
+                LIMIT 3
+
+            )
+            SELECT * FROM suggested_blogs
+        `);
+    return { isLiked, isBookmarked, blog, commentsData };
   }
 }
