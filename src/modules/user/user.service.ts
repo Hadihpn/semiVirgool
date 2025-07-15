@@ -310,7 +310,7 @@ export class UserService {
     let message = PublicMessage.Blocked
     if(user.status=== UserStatus.Block){
       message = PublicMessage.UnBlocked
-      await this.userRepository.update({id:+userId},{status:null})
+      await this.userRepository.update({id:+userId},{status:undefined})
     }else{
       await this.userRepository.update({id:+userId},{status:UserStatus.Block})
     }

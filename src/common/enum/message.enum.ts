@@ -13,6 +13,7 @@ export enum AuthMessage {
   TryAgain = "something wrong. try again",
   LoginAgain = "login again",
   LoginRequired = "something wrong. try login again",
+  Blocked = "contact administrator . you have been restrict",
 }
 export enum PublicMessage {
   LoggedIn = "you logged in sucessfully",

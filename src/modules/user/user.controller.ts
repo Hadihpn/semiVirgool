@@ -43,6 +43,8 @@ import { CheckOtpDto, UserBlockDto } from "../auth/dto/basic.dto";
 import { AuthDecorator } from "src/common/decorator/auth.decorator";
 import { Pagination } from "src/common/decorator/pagination.decorator";
 import { PaginationDto } from "src/common/dtos/pagination.dto";
+import { CanAccess } from "src/common/decorator/role.decorator";
+import { Roles } from "src/common/enum/roles.enum";
 
 @Controller("user")
 @ApiTags("User")
@@ -161,6 +163,7 @@ export class UserController {
     return this.userService.changeUsername(usernameDto.username);
   }
   @Post("blockToggle")
+  @CanAccess(Roles.Admin)
   @ApiConsumes(SwaggerConsumes.UrlEncoded, SwaggerConsumes.Json)
   blockToggle(@Body() userblokDto:UserBlockDto){
     return this.userService.blockToggle(userblokDto)
