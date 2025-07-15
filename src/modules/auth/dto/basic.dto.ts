@@ -22,20 +22,23 @@ export class SignupDto {
 export class AuthDto {
   @ApiProperty()
   @IsString()
-  @Length(3,50, { message: "username must be between 3 and 50 characters" })
+  @Length(3, 50, { message: "username must be between 3 and 50 characters" })
   username: string;
-  @ApiProperty({enum:AuthType})
+  @ApiProperty({ enum: AuthType })
   @IsEnum(AuthType)
   type: string;
   @ApiProperty()
-  @ApiProperty({enum:AuthMethod})
+  @ApiProperty({ enum: AuthMethod })
   @IsEnum(AuthMethod)
   method: AuthMethod;
 }
 export class CheckOtpDto {
   @ApiProperty()
   @IsString()
-  @Length(5,5, { message: "code must be just 5 characters" })
+  @Length(5, 5, { message: "code must be just 5 characters" })
   code: string;
-  
+}
+export class UserBlockDto {
+  @ApiProperty()
+  userId: string;
 }

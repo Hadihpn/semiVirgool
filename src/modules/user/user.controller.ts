@@ -39,7 +39,7 @@ import { Response } from "express";
 import { CookieKeys } from "../auth/enums/cookie.enum";
 import { CookieOptionsToken } from "src/common/utils/cookie.util";
 import { AuthMessage, PublicMessage } from "src/common/enum/message.enum";
-import { CheckOtpDto } from "../auth/dto/basic.dto";
+import { CheckOtpDto, UserBlockDto } from "../auth/dto/basic.dto";
 import { AuthDecorator } from "src/common/decorator/auth.decorator";
 import { Pagination } from "src/common/decorator/pagination.decorator";
 import { PaginationDto } from "src/common/dtos/pagination.dto";
@@ -159,5 +159,10 @@ export class UserController {
     @Res() res: Response
   ) {
     return this.userService.changeUsername(usernameDto.username);
+  }
+  @Post("blockToggle")
+  @ApiConsumes(SwaggerConsumes.UrlEncoded, SwaggerConsumes.Json)
+  blockToggle(@Body() userblokDto:UserBlockDto){
+    return this.userService.blockToggle(userblokDto)
   }
 }

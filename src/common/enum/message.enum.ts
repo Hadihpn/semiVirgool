@@ -29,6 +29,9 @@ export enum PublicMessage {
   CreatedComment = "you commented successfully",
   Follow = "you follow successfully",
   UnFollow = "you unfollow successfully",
+  Blocked = "you Blocked user successfully",
+  UnBlocked = "you unBlocked user successfully",
+  Repoort = "you report user successfully",
 }
 export enum CommentMessage {
   AccepetComment = "the comment accepted successfully",
